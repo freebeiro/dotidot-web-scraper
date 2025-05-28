@@ -1,0 +1,135 @@
+# Git Workflow Rules - Dotidot Web Scraper Challenge
+
+## 🎯 Commit Message Format Checklist
+
+### Before Every Commit
+- [ ] **Subject line starts with type**: `feat:`, `fix:`, `test:`, `refactor:`, `docs:`, `chore:`, `security:`
+- [ ] **Subject line is 50 characters or less**
+- [ ] **Subject line uses imperative mood** ("Add feature" not "Added feature")
+- [ ] **Subject line has no period at the end**
+- [ ] **Subject line describes WHAT was changed**
+
+### Commit Types to Use
+- [ ] `feat:` for new features
+- [ ] `fix:` for bug fixes
+- [ ] `test:` for adding/updating tests
+- [ ] `refactor:` for code cleanup without functionality changes
+- [ ] `docs:` for documentation updates
+- [ ] `chore:` for setup, dependencies, configuration
+- [ ] `security:` for security improvements
+
+### Good Commit Message Examples
+- [ ] `feat: add CSS selector extraction service`
+- [ ] `fix: handle malformed URLs in validation`
+- [ ] `test: add integration tests for /data endpoint`
+- [ ] `security: implement rate limiting per IP`
+- [ ] `refactor: extract validation into service class`
+
+## 🌿 Branch Naming Checklist
+
+### Before Creating Branch
+- [ ] **Branch name format**: `type/short-description`
+- [ ] **Use kebab-case** (hyphens, not underscores)
+- [ ] **Keep description short** (2-4 words max)
+- [ ] **Make purpose clear** from the name
+
+### Branch Name Examples
+- [ ] `feature/css-extraction`
+- [ ] `fix/url-validation`
+- [ ] `test/api-integration`
+- [ ] `security/input-sanitization`
+- [ ] `refactor/service-objects`
+
+## 🔄 Daily Workflow Checklist
+
+### Starting Work Session
+- [ ] `git checkout main`
+- [ ] `git pull origin main`
+- [ ] `git checkout -b feature/your-feature`
+
+### During Development
+- [ ] **Commit frequently** (every logical change)
+- [ ] **Each commit builds successfully**
+- [ ] **Each commit passes all tests**
+- [ ] **Only commit related changes together**
+
+### Ending Work Session
+- [ ] `git push origin your-branch-name`
+- [ ] **OR** merge to main if feature complete
+- [ ] Clean up merged branches
+
+## ⚡ Quick Commit Process
+
+### Every Single Commit Must
+- [ ] **Build without errors**
+- [ ] **Pass all existing tests**
+- [ ] **Follow commit message format**
+- [ ] **Contain only related changes**
+- [ ] **Be easily understandable**
+
+### Atomic Commit Examples
+```bash
+# ✅ GOOD - Each commit is focused
+git commit -m "feat: add HTTP client configuration"
+git commit -m "feat: implement HTML fetching logic"  
+git commit -m "test: add HTTP client tests"
+
+# ❌ BAD - Too much in one commit
+git commit -m "feat: add HTTP client, implement fetching, add tests, fix bugs"
+```
+
+## 🛡️ Security Checklist
+
+### Never Commit These
+- [ ] **No passwords or API keys**
+- [ ] **No database credentials**
+- [ ] **No secret tokens**
+- [ ] **No sensitive configuration**
+
+### Always Check Before Commit
+- [ ] `git diff` to review changes
+- [ ] No sensitive data in files
+- [ ] All files should be committed
+- [ ] Commit message makes sense
+
+## 📋 Interview Project Specific
+
+### Professional Standards Checklist
+- [ ] **Every commit message follows format**
+- [ ] **Commit history tells development story**
+- [ ] **No broken commits** (all build and pass tests)
+- [ ] **Logical progression** from setup to features
+- [ ] **Clean branch management**
+
+### Example Commit Sequence for Interview
+```bash
+# Setup phase
+git commit -m "chore: initialize Rails app with basic gems"
+git commit -m "chore: configure database and Redis"
+
+# Security foundation  
+git commit -m "feat: add URL validation service"
+git commit -m "test: add URL validation tests"
+
+# Core feature
+git commit -m "feat: implement CSS selector extraction"
+git commit -m "test: add CSS extraction tests"
+
+# API layer
+git commit -m "feat: add GET /data endpoint"
+git commit -m "test: add API integration tests"
+```
+
+## ✅ Pre-Push Final Check
+
+### Before Every Push
+- [ ] All tests pass: `rails test` or `rspec`
+- [ ] Code builds: `rails server` starts successfully
+- [ ] Commit messages follow format
+- [ ] Branch name follows format
+- [ ] No sensitive data committed
+- [ ] Ready for technical review
+
+---
+
+**Simple Rule: If any checkbox is unchecked, fix it before proceeding!**
