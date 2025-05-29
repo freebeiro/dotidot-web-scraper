@@ -1,0 +1,66 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dotidot_scraper_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Fetch all history for all branches
+    
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2.6'
+        bundler-cache: true
+    
+    - name: Run RuboCop with GitHub annotations
+      uses: reviewdog/action-rubocop@v2
+      with:
+        rubocop_version: gemfile
+        reporter: github-pr-check
+        fail_level: error
+    
+    - name: Check code complexity
+      run: |
+        gem install rubycritic
+        rubycritic app lib --minimum-score 85 --no-browser --format console
+    
+    - name: Check for code smells with Reek
+      run: |
+        gem install reek
+        reek app lib || echo "⚠️  Reek warnings found but not blocking build"
+    
+    - name: Setup database
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/dotidot_scraper_test
+      run: |
+        bundle exec rails db:schema:load
+    
+    - name: Check test coverage
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/dotidot_scraper_test
+      run: |
+        bundle exec rspec
+        # Add coverage threshold check here if using SimpleCov

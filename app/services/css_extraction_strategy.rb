@@ -26,8 +26,8 @@ class CssExtractionStrategy
     /vbscript:/i
   ].freeze
 
-  def self.extract(document, fields)
-    new(document, fields).extract
+  def self.call(document, fields)
+    new(document, fields).call
   end
 
   def initialize(document, fields)
@@ -35,10 +35,10 @@ class CssExtractionStrategy
     @fields = normalize_fields(fields)
   end
 
-  def extract
+  def call
     validate_inputs
 
-    @fields.map do |field|
+    results = @fields.map do |field|
       extract_single_field(field)
     rescue => e
       Rails.logger.error("Error extracting field '#{field[:selector]}': #{e.message}")
@@ -48,6 +48,27 @@ class CssExtractionStrategy
         error: e.message
       )
     end
+
+    # Convert to hash format expected by tests
+    data = {}
+    results.each do |result|
+      next unless result.success?
+
+      # Extract field name from selector or use index
+      field_name = @fields.find { |f| f[:selector] == result.selector }&.dig(:name) || result.selector
+      data[field_name] = result.value
+    end
+
+    {
+      success: true,
+      data: data,
+      results: results
+    }
+  rescue => e
+    {
+      success: false,
+      error: e.message
+    }
   end
 
   private
@@ -58,13 +79,16 @@ class CssExtractionStrategy
     Array(fields).map do |field|
       case field
       when String
-        { selector: field, name: field }
+        { selector: field, name: field, type: "text" }
       when Hash
-        field = field.stringify_keys if field.respond_to?(:stringify_keys)
-        {
-          selector: field["selector"] || field[:selector],
-          name: field["name"] || field[:name] || field["selector"] || field[:selector]
-        }
+        # Normalize hash keys to symbols for consistent access
+        normalized = {}
+        normalized[:selector] = field[:selector] || field["selector"]
+        normalized[:name] = field[:name] || field["name"] || normalized[:selector]
+        normalized[:type] = field[:type] || field["type"] || "text"
+        normalized[:attribute] = field[:attribute] || field["attribute"]
+        normalized[:multiple] = field[:multiple] || field["multiple"] || false
+        normalized
       else
         raise ScraperErrors::ValidationError, "Invalid field format: #{field.class}"
       end
@@ -72,8 +96,7 @@ class CssExtractionStrategy
   end
 
   def validate_inputs
-    raise ScraperErrors::ValidationError, "Document cannot be nil" if @document.nil?
-    raise ScraperErrors::ValidationError, "Fields cannot be empty" if @fields.empty?
+    raise ScraperErrors::ValidationError, "Document is nil" if @document.nil?
 
     @fields.each do |field|
       validate_selector(field[:selector])
@@ -98,7 +121,7 @@ class CssExtractionStrategy
 
     begin
       elements = @document.css(selector)
-      value = extract_value_from_elements(elements)
+      value = extract_value_from_elements(elements, field)
 
       ExtractedField.new(
         selector: selector,
@@ -110,14 +133,32 @@ class CssExtractionStrategy
     end
   end
 
-  def extract_value_from_elements(elements)
+  def extract_value_from_elements(elements, field)
     return nil if elements.empty?
 
-    if elements.length == 1
-      clean_text(elements.first.text)
+    extraction_type = field[:type] || "text"
+    multiple = field[:multiple] || false
+
+    if multiple
+      # Multiple elements requested - return array
+      elements.map { |element| extract_single_value(element, extraction_type, field) }
     else
-      # Multiple elements - return array of text content
-      elements.map { |element| clean_text(element.text) }
+      # Single element requested - return first match only
+      extract_single_value(elements.first, extraction_type, field)
+    end
+  end
+
+  def extract_single_value(element, extraction_type, field)
+    case extraction_type
+    when "html"
+      element.inner_html
+    when "attribute"
+      attribute_name = field[:attribute]
+      raise ScraperErrors::ValidationError, "Attribute name required for attribute extraction" unless attribute_name
+
+      element[attribute_name]
+    else # "text" or default
+      clean_text(element.text)
     end
   end
 

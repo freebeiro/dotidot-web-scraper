@@ -551,4 +551,67 @@ end
 - [ ] Tests cover the functionality
 - [ ] Documentation is up-to-date
 
+## 🚨 Automated Quality Enforcement
+
+### Pre-commit Checks (MANDATORY)
+- [ ] **Run `bundle exec rspec`** - ALL tests must pass (0 failures)
+- [ ] **Run `bundle exec rubocop`** - ALL offenses must be fixed (0 violations)
+- [ ] **Check git status** - Only relevant files should be staged
+- [ ] **Review diff** - Ensure changes match intended scope
+
+### Pre-push Checks (CRITICAL)
+- [ ] **Full test suite** must pass without any pending tests for core features
+- [ ] **Rubocop compliance** with zero violations
+- [ ] **No debug code** (binding.pry, puts, console.log)
+- [ ] **No commented code** unless explicitly documented
+
+### Development Workflow Enforcement
+```bash
+# MANDATORY pre-commit workflow
+git add <files>
+bundle exec rspec          # MUST pass 100%
+bundle exec rubocop        # MUST show 0 offenses
+git commit -m "message"
+
+# MANDATORY pre-push workflow  
+bundle exec rspec          # Final verification
+git push origin branch
+```
+
+### Automated Checks Setup
+```bash
+# Add to .git/hooks/pre-commit
+#!/bin/sh
+echo "Running pre-commit checks..."
+
+echo "1. Running RSpec tests..."
+bundle exec rspec
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Fix failing tests before committing."
+  exit 1
+fi
+
+echo "2. Running Rubocop..."
+bundle exec rubocop
+if [ $? -ne 0 ]; then
+  echo "❌ Rubocop violations found. Fix code style before committing."
+  exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"
+exit 0
+```
+
+### Emergency Recovery Protocol
+If you find yourself with 100+ failing tests again:
+
+1. **STOP** - Don't panic commit or push
+2. **Backup current state** - `cp -r spec spec_backup_$(date +%Y%m%d_%H%M%S)`
+3. **Run tests incrementally** - Fix by service/controller, not all at once
+4. **Use test filtering** - `bundle exec rspec spec/services/specific_service_spec.rb`
+5. **Fix rubocop incrementally** - `bundle exec rubocop --autocorrect`
+6. **Remove backup** when all tests pass - `rm -rf spec_backup_*`
+
 **Remember: Code quality is not just about making it work - it's about making it maintainable, testable, and understandable for the team!**
+
+**⚠️ NEVER COMMIT WITH FAILING TESTS OR RUBOCOP VIOLATIONS - This is non-negotiable!**

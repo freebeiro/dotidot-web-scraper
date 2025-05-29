@@ -95,6 +95,7 @@ This guide outlines the structured process for initiating a new project using a 
     d. **Integration Check**: Rules must work together without conflicts across different categories
     e. **Completeness Verification**: Cover all essential aspects of the technology/practice area
     f. **MANDATORY: Generate AI Workflow Rules** - Always create `rules/ai_workflow_rules.md` with continuous enforcement
+    g. **MANDATORY: Add Quality Enforcement** - Include automated pre-commit hooks and zero tolerance policies
     
     **Rule File Requirements:**
     - Use checkbox format for actionable items
@@ -106,14 +107,34 @@ This guide outlines the structured process for initiating a new project using a 
     
     **MANDATORY Rule Files (Always Generated):**
     - `rules/ai_workflow_rules.md` - Code reuse, modular development, NO NEW/UPDATED files, 4-step process enforcement
+    - `rules/code_quality_rules.md` - MUST include automated pre-commit hooks and zero tolerance enforcement
+    - `rules/testing_strategy_rules.md` - MUST include mandatory rspec/rubocop workflows and emergency recovery protocols
     - At least 3-5 technology-specific rule files based on project requirements in `rules/` directory
     
     **MANDATORY Procedure Files (Always Generated):**
     - `procedures/LIVE_RULE_FILTERING_PROCESS.md` - Live rule filtering with continuous enforcement throughout project
     - `procedures/AI_HANDOFF_INSTRUCTIONS.md` - Complete instructions for AI continuity
     - `procedures/UNPLANNED_TASK_PROCESS.md` - How to handle unplanned work
+    - `procedures/DEBUGGING_WORKFLOW.md` - DEBUGGING_TASK workflow for error handling and test failures
     
     **Testing Guidelines:** When generating testing guidelines (if testing was requested), the AI must ensure the draft covers standard levels (Unit, Integration, System/E2E) and include recommendations for testing infrastructure appropriate to the project type and classification.
+    
+    **MANDATORY: Automated Quality Enforcement Setup**
+    For ALL projects with testing frameworks, the AI MUST generate and set up:
+    - **Pre-commit hook** file at `.git/hooks/pre-commit` (executable)
+    - **Mandatory rspec/linting checks** before any commits are allowed
+    - **Zero tolerance policy** documentation for failing tests/style violations
+    - **Emergency recovery protocols** for multiple failing tests situations
+    - **Incremental fixing workflows** to prevent accumulation of technical debt
+    
+    **Pre-commit Hook Requirements:**
+    ```bash
+    #!/bin/sh
+    # Run tests and style checks
+    bundle exec rspec || exit 1
+    bundle exec rubocop || exit 1
+    echo "✅ All quality checks passed!"
+    ```
 
 8.  **AI Presents Draft Rules & Prompts User to Save:** "Based on research into current best practices, here is the draft content for each rule file. Please review, adjust if needed, and save these to a `rules/` directory. Let me know when done."
 
@@ -212,16 +233,19 @@ This guide outlines the structured process for initiating a new project using a 
     **Bootstrap Completion Checklist:**
     - [ ] All rule files generated with proper research and structure
     - [ ] **MANDATORY: rules/ai_workflow_rules.md created** with continuous enforcement
+    - [ ] **MANDATORY: rules/code_quality_rules.md created** with automated enforcement sections
+    - [ ] **MANDATORY: rules/testing_strategy_rules.md created** with zero tolerance policies
+    - [ ] **MANDATORY: Pre-commit hook setup** at `.git/hooks/pre-commit` (executable)
     - [ ] **MANDATORY: procedures/LIVE_RULE_FILTERING_PROCESS.md created** with 4-step process
     - [ ] **MANDATORY: procedures/AI_HANDOFF_INSTRUCTIONS.md created** for AI continuity
     - [ ] **MANDATORY: procedures/UNPLANNED_TASK_PROCESS.md created** for handling unplanned work
+    - [ ] **MANDATORY: procedures/DEBUGGING_WORKFLOW.md created** for DEBUGGING_TASK workflow
     - [ ] procedures/PROJECT_PLAN.md created with detailed, testable steps
     - [ ] Memory bank files created and populated
     - [ ] Live rule filtering process established
     - [ ] Quality gates and success criteria defined
-    - [ ] **procedures/AI_HANDOFF_INSTRUCTIONS.md generated** (see step 17)
-    - [ ] **procedures/LIVE_RULE_FILTERING_PROCESS.md generated** (see step 18)
-    - [ ] **procedures/UNPLANNED_TASK_PROCESS.md generated** (see step 19)
+    - [ ] **Automated quality enforcement mechanisms** (pre-commit hooks, zero tolerance policies)
+    - [ ] **Emergency recovery protocols** documented for test failures
     - [ ] **All enforcement mechanisms automatically created**
     
 17. **AI Generates Handoff Instructions:** The AI automatically creates `procedures/AI_HANDOFF_INSTRUCTIONS.md` file containing complete instructions for any future AI assistant to seamlessly continue the project.
@@ -230,10 +254,28 @@ This guide outlines the structured process for initiating a new project using a 
 
 19. **AI Generates Unplanned Task Process:** The AI automatically creates `procedures/UNPLANNED_TASK_PROCESS.md` file with instructions for handling unplanned work that arises during development.
 
+20. **AI Generates Debugging Workflow Process:** The AI automatically creates `procedures/DEBUGGING_WORKFLOW.md` file with detailed instructions for the DEBUGGING_TASK workflow including mandatory debug branch creation and cross-AI session compatibility.
+
+    **DEBUGGING_WORKFLOW.md Content Requirements (Mandatory):**
+    - **Mandatory Triggers Section**: List specific conditions that require debugging mode (rubocop/rspec failures, recurring test failures, etc.)
+    - **DEBUGGING_TASK Classification**: Define as separate task type with HIGH priority
+    - **5-Phase Step-by-Step Procedure**: 
+      - Phase 1: Preparation & Branch Setup (document problem, verify state, create debug branch)
+      - Phase 2: Safe Experimentation (reproduce, analyze, experiment freely on debug branch)
+      - Phase 3: Solution Validation (verify complete fix, test edge cases, document solution)
+      - Phase 4: Clean Implementation (return to feature branch, apply clean solution, final verification)
+      - Phase 5: Cleanup & Documentation (document for future, clean up debug branch)
+    - **AI-Specific Instructions**: How any AI/LLM should follow this procedure
+    - **Cross-Session Handoff Format**: Template for continuing debugging across different AI sessions
+    - **Critical Rules**: Never commit debug code to feature branches, always verify complete solution
+    - **Integration Guidelines**: How debugging workflow integrates with existing development process
+    - **Success Metrics**: Clear criteria for successful debugging completion
+
     **Enforcement File Requirements:**
     - **procedures/AI_HANDOFF_INSTRUCTIONS.md**: Complete takeover instructions for any AI
     - **procedures/LIVE_RULE_FILTERING_PROCESS.md**: Mandatory 4-step process with continuous enforcement
     - **procedures/UNPLANNED_TASK_PROCESS.md**: Process for handling unplanned work
+    - **procedures/DEBUGGING_WORKFLOW.md**: DEBUGGING_TASK workflow with debug branch creation and cross-AI compatibility
     - **Bootstrap completion checklist** in each file
     - **Violation detection and recovery** protocols
     - **Self-monitoring checkpoints** for AI assistants
@@ -246,6 +288,7 @@ This guide outlines the structured process for initiating a new project using a 
     - Quality requirements and testing standards
     - Project context and technical stack overview
     - Example handoff scenario showing how AI should respond when taking over
+    - **DEBUGGING_WORKFLOW.md specific requirements**: 5-phase debugging procedure, mandatory triggers, debug branch workflow, cross-AI session compatibility
     - **Continuous enforcement throughout entire project lifecycle**
     - **Violation detection and recovery protocols**
     - **Self-correction mechanisms for AI assistants**
@@ -278,6 +321,7 @@ This guide outlines the structured process for initiating a new project using a 
     - ✅ procedures/LIVE_RULE_FILTERING_PROCESS.md - Mandatory rule filtering for every task
     - ✅ procedures/AI_HANDOFF_INSTRUCTIONS.md - Complete AI continuity instructions
     - ✅ procedures/UNPLANNED_TASK_PROCESS.md - Process for handling unplanned work
+    - ✅ procedures/DEBUGGING_WORKFLOW.md - DEBUGGING_TASK workflow for error handling and cross-AI sessions
     
     📂 All files saved to: [directory path]
     

@@ -1,0 +1,49 @@
+name: Security Checks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0' # Weekly on Sunday
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2.6'
+        bundler-cache: true
+    
+    - name: Run Brakeman security scanner
+      run: |
+        gem install brakeman
+        brakeman -A -z -q
+    
+    - name: Check for known vulnerabilities in dependencies
+      run: |
+        gem install bundler-audit
+        bundle audit check --update
+    
+    - name: Run OWASP dependency check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'dotidot-scraper'
+        path: '.'
+        format: 'HTML'
+        args: >
+          --enableRetired
+          --enableExperimental
+    
+    - name: Upload dependency check results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: dependency-check-report
+        path: reports/

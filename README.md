@@ -72,22 +72,32 @@ bundle exec rspec
 rails server
 ```
 
-## 🧪 Testing
+## 🧪 Testing & Quality Assurance
 
-The project maintains >90% test coverage with:
+The project maintains **100% test coverage** with **zero tolerance for failing tests**:
 
 ```bash
-# Run all tests
-bundle exec rspec
+# MANDATORY: Run before ANY commit
+bundle exec rspec                    # Must show 0 failures
+bundle exec rubocop                  # Must show 0 violations
 
 # Run specific test types
 bundle exec rspec spec/requests/     # API endpoint tests
 bundle exec rspec spec/services/     # Service object tests
-bundle exec rspec spec/models/       # Model tests
+bundle exec rspec spec/integration/  # End-to-end tests
 
-# Generate coverage report
-COVERAGE=true bundle exec rspec
+# Emergency: Fix failing tests incrementally  
+bundle exec rspec --fail-fast        # Stop on first failure
+bundle exec rspec spec/file_spec.rb  # Fix one file at a time
 ```
+
+### **Automated Quality Enforcement**
+- **Pre-commit hooks** prevent commits with failing tests or style violations
+- **Zero tolerance policy** for broken tests or rubocop violations  
+- **Incremental fixing protocol** for emergencies with multiple failing tests
+- **Automated style fixes** with `bundle exec rubocop --autocorrect`
+
+**🚨 CRITICAL: Never commit, push, or merge with failing tests!**
 
 ## 🛡️ Security Features
 

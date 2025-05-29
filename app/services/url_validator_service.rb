@@ -49,7 +49,15 @@ class UrlValidatorService
     validate_scheme
     validate_host_security
 
-    @parsed_uri
+    {
+      valid: true,
+      url: @parsed_uri.to_s
+    }
+  rescue ScraperErrors::ValidationError, ScraperErrors::SecurityError => e
+    {
+      valid: false,
+      error: e.message
+    }
   end
 
   private
@@ -71,9 +79,10 @@ class UrlValidatorService
   end
 
   def validate_scheme
-    return if ALLOWED_SCHEMES.include?(@parsed_uri.scheme)
+    scheme = @parsed_uri.scheme
+    return if ALLOWED_SCHEMES.include?(scheme)
 
-    raise ScraperErrors::ValidationError, "URL scheme '#{@parsed_uri.scheme}' not allowed. Must be HTTP or HTTPS"
+    raise ScraperErrors::ValidationError, "URL scheme '#{scheme}' not allowed. Must be HTTP or HTTPS"
   end
 
   def validate_host_security
@@ -82,7 +91,7 @@ class UrlValidatorService
 
     # Check for blocked hostnames (case-insensitive)
     if BLOCKED_HOSTNAMES.any? { |blocked| host.casecmp?(blocked) }
-      raise ScraperErrors::SecurityError, "Access to host '#{host}' is not allowed"
+      raise ScraperErrors::SecurityError, "Access to host '#{host}' is blocked for security reasons"
     end
 
     # Check for private IP addresses
@@ -95,7 +104,7 @@ class UrlValidatorService
 
     # Check if it's in any private range
     if PRIVATE_IP_RANGES.any? { |range| range.include?(ip_addr) }
-      raise ScraperErrors::SecurityError, "Access to private IP address '#{host}' is not allowed"
+      raise ScraperErrors::SecurityError, "Access to private IP address '#{host}' is blocked for security reasons"
     end
   rescue IPAddr::InvalidAddressError
     # Not an IP address, which is fine for domain names

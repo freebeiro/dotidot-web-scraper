@@ -38,23 +38,47 @@ class HttpClientService
   def call
     attempt = 0
     delay = DEFAULT_RETRY_DELAY
+    start_time = Time.current
 
     begin
       attempt += 1
-      perform_request
+      response = perform_request
+      build_success_response(response, start_time, attempt)
     rescue *RETRYABLE_ERRORS => e
-      unless attempt < @max_retries
-        raise ScraperErrors::NetworkError, "Failed to fetch URL after #{@max_retries} attempts: #{e.message}"
+      if attempt < @max_retries
+        Rails.logger.warn("HTTP request failed (attempt #{attempt}/#{@max_retries}): #{e.message}")
+        sleep(delay)
+        delay = [delay * 2, MAX_RETRY_DELAY].min
+        retry
+      else
+        build_error_response("Failed after #{@max_retries} attempts: #{e.message}", attempt, start_time)
       end
-
-      Rails.logger.warn("HTTP request failed (attempt #{attempt}/#{@max_retries}): #{e.message}")
-      sleep(delay)
-      delay = [delay * 2, MAX_RETRY_DELAY].min
-      retry
+    rescue => e
+      build_error_response(e.message, attempt, start_time)
     end
   end
 
   private
+
+  def build_success_response(response, start_time, attempt)
+    {
+      success: true,
+      body: response[:body],
+      status: response[:status],
+      headers: response[:headers],
+      response_time: Time.current - start_time,
+      attempts: attempt
+    }
+  end
+
+  def build_error_response(message, attempt, start_time)
+    {
+      success: false,
+      error: message,
+      attempts: attempt,
+      response_time: Time.current - start_time
+    }
+  end
 
   def perform_request
     response = HTTP
@@ -67,6 +91,10 @@ class HttpClientService
       raise ScraperErrors::NetworkError, "HTTP request failed with status #{response.code}: #{response.reason}"
     end
 
-    response.body.to_s
+    {
+      body: response.body.to_s,
+      status: response.code,
+      headers: response.headers.to_h.transform_keys(&:downcase)
+    }
   end
 end

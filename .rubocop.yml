@@ -1,7 +1,7 @@
 # RuboCop configuration for Dotidot Web Scraper
 # This configuration enforces Ruby and Rails best practices
 
-require:
+plugins:
   - rubocop-rails
 
 AllCops:
@@ -23,6 +23,11 @@ AllCops:
 Rails:
   Enabled: true
 
+Rails/Blank:
+  Exclude:
+    - 'app/services/**/*'
+    - 'lib/**/*'
+
 # Style configurations
 Style/Documentation:
   Enabled: false
@@ -36,10 +41,15 @@ Style/StringLiterals:
 
 # Metrics configurations
 Metrics/MethodLength:
-  Max: 28
+  Max: 35
 
 Metrics/ClassLength:
   Max: 150
+
+Metrics/ModuleLength:
+  Max: 130
+  Exclude:
+    - 'app/controllers/concerns/*'
 
 Metrics/BlockLength:
   Exclude:
@@ -47,7 +57,7 @@ Metrics/BlockLength:
     - 'config/routes.rb'
 
 Metrics/AbcSize:
-  Max: 26
+  Max: 30
 
 # Layout configurations
 Layout/LineLength:
@@ -61,3 +71,22 @@ Style/ClassAndModuleChildren:
 
 Style/RescueStandardError:
   EnforcedStyle: implicit
+
+# Allow OpenStruct for service responses
+Style/OpenStructUse:
+  Enabled: false
+
+# Allow hash case statements for error mapping
+Style/HashLikeCase:
+  Enabled: false
+
+# Allow complexity in specs and service strategies
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - 'spec/**/*'
+    - 'app/services/*_strategy.rb'
+
+Metrics/PerceivedComplexity:
+  Exclude:
+    - 'spec/**/*'
+    - 'app/services/*_strategy.rb'

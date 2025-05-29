@@ -63,26 +63,20 @@ RSpec.describe HttpClientService do
 
         expect(result[:success]).to be true
       end
+
     end
 
     context "custom headers" do
-      it "sends default user agent" do
+      it "sends custom user agent" do
         stub_request(:get, url)
-          .with(headers: { "User-Agent" => "Dotidot-Scraper/1.0" })
+          .with(headers: { "User-Agent" => /DotidotScraper/ })
           .to_return(status: 200, body: html_content)
 
         result = described_class.call(url)
         expect(result[:success]).to be true
       end
 
-      it "sends custom user agent when provided" do
-        stub_request(:get, url)
-          .with(headers: { "User-Agent" => "Custom-Agent/2.0" })
-          .to_return(status: 200, body: html_content)
 
-        result = described_class.call(url, user_agent: "Custom-Agent/2.0")
-        expect(result[:success]).to be true
-      end
     end
 
     context "timeout handling" do
@@ -95,21 +89,21 @@ RSpec.describe HttpClientService do
         expect(result[:error]).to include("timed out")
       end
 
-      it "uses custom timeout value" do
-        stub_request(:get, url).to_return(status: 200, body: html_content)
+      it "respects custom timeout" do
+        stub_request(:get, url).to_return(status: 200, body: html_content).with_delay(2)
 
-        # Just verify it accepts the timeout parameter
-        result = described_class.call(url, timeout: 5)
+        result = described_class.call(url, timeout: 3)
+
         expect(result[:success]).to be true
       end
 
-      it "uses default timeout when not specified" do
+      it "uses default timeout" do
         stub_request(:get, url).to_timeout
 
         result = described_class.call(url)
 
         expect(result[:success]).to be false
-        expect(result[:error]).to include("timed out")
+        expect(result[:error]).to include("timeout")
       end
     end
 
@@ -119,49 +113,44 @@ RSpec.describe HttpClientService do
         stub_request(:get, url)
           .to_return do |_request|
             call_count += 1
-            raise HTTP::ConnectionError, "Connection failed" if call_count < 3
-
-            { status: 200, body: html_content }
-          end
-
-        result = described_class.call(url)
-
-        expect(result[:success]).to be true
-        expect(result[:attempts]).to eq(3)
-      end
-
-      it "retries with exponential backoff" do
-        start_time = Time.current
-        attempts = []
-
-        stub_request(:get, url)
-          .to_return do |_request|
-            attempts << (Time.current - start_time)
-            raise HTTP::TimeoutError if attempts.size < 3
-
-            { status: 200, body: html_content }
+            if call_count < 3
+              { status: 503 }
+            else
+              { status: 200, body: html_content }
+            end
           end
 
         result = described_class.call(url, max_retries: 3)
 
         expect(result[:success]).to be true
-        expect(attempts.size).to eq(3)
-        # Second retry should have longer delay than first
-        expect(attempts[2] - attempts[1]).to be > (attempts[1] - attempts[0])
+        expect(result[:body]).to eq(html_content)
+        expect(call_count).to eq(3)
       end
 
-      it "does not retry on HTTP errors" do
+      it "retries with exponential backoff" do
+        start_time = Time.current
+        stub_request(:get, url).to_return(status: 503).times(2).then
+                               .to_return(status: 200, body: html_content)
+
+        result = described_class.call(url, max_retries: 2)
+        elapsed = Time.current - start_time
+
+        expect(result[:success]).to be true
+        expect(elapsed).to be >= 0.3 # At least base_delay + (base_delay * 2)
+      end
+
+      it "does not retry on client errors" do
         call_count = 0
         stub_request(:get, url)
           .to_return do |_request|
             call_count += 1
-            { status: 404, body: "Not Found" }
+            { status: 404 }
           end
 
-        result = described_class.call(url)
+        result = described_class.call(url, max_retries: 3)
 
         expect(result[:success]).to be false
-        expect(result[:error]).to include("404")
+        expect(result[:status]).to eq(404)
         expect(call_count).to eq(1)
       end
 
@@ -170,87 +159,83 @@ RSpec.describe HttpClientService do
         stub_request(:get, url)
           .to_return do |_request|
             call_count += 1
-            raise SocketError, "getaddrinfo: Name or service not known" if call_count < 2
+            raise Errno::ECONNREFUSED if call_count < 2
 
             { status: 200, body: html_content }
           end
 
-        result = described_class.call(url)
+        result = described_class.call(url, max_retries: 2)
 
         expect(result[:success]).to be true
+        expect(call_count).to eq(2)
       end
 
       it "gives up after max retries" do
-        stub_request(:get, url)
-          .to_raise(HTTP::ConnectionError)
+        stub_request(:get, url).to_return(status: 503)
 
         result = described_class.call(url, max_retries: 2)
 
         expect(result[:success]).to be false
-        expect(result[:error]).to include("Failed after 2 attempts")
-        expect(result[:attempts]).to eq(2)
+        expect(result[:error]).to include("Failed after 3 attempts")
       end
     end
 
     context "error handling" do
       it "handles connection refused" do
-        stub_request(:get, url)
-          .to_raise(Errno::ECONNREFUSED)
+        stub_request(:get, url).to_raise(Errno::ECONNREFUSED)
 
-        result = described_class.call(url)
+        result = described_class.call(url, max_retries: 0)
 
         expect(result[:success]).to be false
         expect(result[:error]).to include("Connection refused")
       end
 
       it "handles DNS resolution failures" do
-        stub_request(:get, url)
-          .to_raise(SocketError.new("getaddrinfo: Name or service not known"))
+        stub_request(:get, url).to_raise(SocketError.new("getaddrinfo: Name or service not known"))
 
-        result = described_class.call(url)
+        result = described_class.call(url, max_retries: 0)
 
         expect(result[:success]).to be false
-        expect(result[:error]).to include("Name or service not known")
+        expect(result[:error]).to include("DNS resolution failed")
       end
 
       it "handles SSL errors" do
-        stub_request(:get, url)
-          .to_raise(OpenSSL::SSL::SSLError.new("SSL_connect returned=1"))
+        stub_request(:get, url).to_raise(OpenSSL::SSL::SSLError.new("SSL_connect error"))
 
-        result = described_class.call(url)
+        result = described_class.call(url, max_retries: 0)
 
         expect(result[:success]).to be false
-        expect(result[:error]).to include("SSL")
+        expect(result[:error]).to include("SSL error")
       end
 
       it "handles malformed responses" do
         stub_request(:get, url)
-          .to_return(status: 200, body: nil)
+          .to_return(status: 200, body: "\xFF\xFE", headers: { "Content-Type" => "text/html" })
 
         result = described_class.call(url)
 
         expect(result[:success]).to be true
-        expect(result[:body]).to eq("")
+        expect(result[:body]).to be_a(String)
       end
 
       it "handles 4xx errors" do
-        stub_request(:get, url)
-          .to_return(status: 403, body: "Forbidden")
+        stub_request(:get, url).to_return(status: 404, body: "Not Found")
 
         result = described_class.call(url)
 
         expect(result[:success]).to be false
-        expect(result[:error]).to include("403")
+        expect(result[:status]).to eq(404)
+        expect(result[:error]).to include("HTTP 404")
       end
 
       it "handles 5xx errors" do
-        stub_request(:get, url)
-          .to_return(status: 500, body: "Internal Server Error")
+        stub_request(:get, url).to_return(status: 500, body: "Internal Server Error")
 
-        result = described_class.call(url)
+        result = described_class.call(url, max_retries: 0)
 
         expect(result[:success]).to be false
-        expect(result[:error]).to include("500")
+        expect(result[:status]).to eq(500)
+        expect(result[:error]).to include("HTTP 500")
       end
     end
 
@@ -258,12 +243,44 @@ RSpec.describe HttpClientService do
       it "handles different encodings" do
         utf8_content = "<html><body>Hello 世界</body></html>"
         stub_request(:get, url)
-          .to_return(status: 200, body: utf8_content, headers: { "Content-Type" => "text/html; charset=utf-8" })
+          .to_return(
+            status: 200,
+            body: utf8_content.encode("UTF-8"),
+            headers: { "Content-Type" => "text/html; charset=utf-8" }
+          )
 
         result = described_class.call(url)
 
         expect(result[:success]).to be true
-        expect(result[:body]).to eq(utf8_content)
+        expect(result[:body]).to include("世界")
+        expect(result[:body].encoding).to eq(Encoding::UTF_8)
+      end
+
+      it "handles gzipped content" do
+        require "zlib"
+        gzipped = Zlib.gzip(html_content)
+
+        stub_request(:get, url)
+          .to_return(
+            status: 200,
+            body: gzipped,
+            headers: { "Content-Encoding" => "gzip", "Content-Type" => "text/html" }
+          )
+
+        result = described_class.call(url)
+
+        expect(result[:success]).to be true
+        expect(result[:body]).to eq(html_content)
+      end
+
+      it "rejects non-HTML content types" do
+        stub_request(:get, url)
+          .to_return(status: 200, body: "binary data", headers: { "Content-Type" => "application/pdf" })
+
+        result = described_class.call(url)
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("Invalid content type")
       end
 
       it "handles missing content type" do
@@ -275,17 +292,40 @@ RSpec.describe HttpClientService do
         expect(result[:success]).to be true
         expect(result[:body]).to eq(html_content)
       end
-    end
 
-    context "performance" do
-      it "tracks response time" do
+      it "enforces size limits" do
+        large_content = "<html>#{'x' * 15_000_000}</html>"
         stub_request(:get, url)
-          .to_return(status: 200, body: html_content)
+          .to_return(status: 200, body: large_content)
 
         result = described_class.call(url)
 
-        expect(result[:response_time]).to be_a(Float)
-        expect(result[:response_time]).to be > 0
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("Response too large")
+      end
+    end
+
+    context "performance" do
+      it "tracks response time accurately" do
+        stub_request(:get, url)
+          .to_return(status: 200, body: html_content)
+          .with_delay(0.5)
+
+        result = described_class.call(url)
+
+        expect(result[:response_time]).to be >= 0.5
+        expect(result[:response_time]).to be < 1.0
+      end
+
+      it "handles concurrent requests" do
+        stub_request(:get, /example\.com/)
+          .to_return(status: 200, body: html_content)
+
+        urls = (1..5).map { |i| "https://example.com/page#{i}" }
+        results = urls.map { |u| Thread.new { described_class.call(u) } }.map(&:value)
+
+        expect(results).to all(include(success: true))
+        expect(results.map { |r| r[:url] }).to match_array(urls)
       end
     end
 
@@ -320,9 +360,23 @@ RSpec.describe HttpClientService do
         expect(result[:success]).to be true
       end
 
+      it "handles circular redirects" do
+        stub_request(:get, url)
+          .to_return(status: 301, headers: { "Location" => "https://example.com/a" })
+        stub_request(:get, "https://example.com/a")
+          .to_return(status: 301, headers: { "Location" => "https://example.com/b" })
+        stub_request(:get, "https://example.com/b")
+          .to_return(status: 301, headers: { "Location" => url })
+
+        result = described_class.call(url)
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("redirect")
+      end
+
       it "handles relative redirects" do
         stub_request(:get, url)
-          .to_return(status: 302, headers: { "Location" => "/new-path" })
+          .to_return(status: 301, headers: { "Location" => "/new-path" })
         stub_request(:get, "https://example.com/new-path")
           .to_return(status: 200, body: html_content)
 

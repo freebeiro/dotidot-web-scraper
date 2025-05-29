@@ -44,8 +44,8 @@ RSpec.describe CssExtractionStrategy do
       it "extracts multiple fields" do
         fields = [
           { name: "title", selector: "h1.title", type: "text" },
-          { name: "first_product", selector: ".product .name", type: "text" },
-          { name: "first_price", selector: ".product .price", type: "text" }
+          { name: "first_product", selector: ".product:first .name", type: "text" },
+          { name: "first_price", selector: ".product:first .price", type: "text" }
         ]
 
         result = described_class.call(doc, fields)
@@ -76,7 +76,7 @@ RSpec.describe CssExtractionStrategy do
       it "extracts HTML content" do
         field = {
           name: "description_html",
-          selector: ".description",
+          selector: ".description:first",
           type: "html"
         }
 
@@ -118,7 +118,7 @@ RSpec.describe CssExtractionStrategy do
 
       it "returns empty array when no elements match" do
         field = {
-          name: "nonexistent",
+          name: "missing",
           selector: ".nonexistent",
           type: "text",
           multiple: true
@@ -127,20 +127,25 @@ RSpec.describe CssExtractionStrategy do
         result = described_class.call(doc, [field])
 
         expect(result[:success]).to be true
-        expect(result[:data]["nonexistent"]).to be_nil
+        expect(result[:data]["missing"]).to eq([])
       end
     end
 
     context "text normalization" do
       let(:whitespace_html) do
         <<~HTML
-          <div class="spaced">Multiple   spaces    here</div>
-          <div class="newlines">Line 1
-          Line 2
-
-          Line 3</div>
-          <pre class="preformatted">  Preserved    spacing  </pre>
-          <div class="nbsp">Non&nbsp;breaking&nbsp;spaces</div>
+          <html>
+            <body>
+              <p class="spaced">  Multiple   spaces   here  </p>
+              <p class="newlines">
+                Line 1
+                Line 2
+                Line 3
+              </p>
+              <pre class="preformatted">  Preserved   spacing  </pre>
+              <p class="nbsp">Non&nbsp;breaking&nbsp;spaces</p>
+            </body>
+          </html>
         HTML
       end
 
@@ -194,6 +199,15 @@ RSpec.describe CssExtractionStrategy do
         expect(result[:data]["missing"]).to be_nil
       end
 
+      it "handles invalid selectors" do
+        field = { name: "invalid", selector: "!!!invalid", type: "text" }
+
+        result = described_class.call(doc, [field])
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("CSS selector error")
+      end
+
       it "handles missing attributes" do
         field = {
           name: "missing_attr",
@@ -224,81 +238,223 @@ RSpec.describe CssExtractionStrategy do
 
       it "validates field types" do
         field = {
-          name: "unknown_type",
+          name: "invalid_type",
           selector: ".title",
-          type: "unknown"
+          type: "invalid"
+        }
+
+        result = described_class.call(doc, [field])
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("Unknown extraction type")
+      end
+    end
+
+    context "complex selectors" do
+      it "handles pseudo-selectors" do
+        fields = [
+          { name: "first_li", selector: "li:first-child", type: "text" },
+          { name: "last_li", selector: "li:last-child", type: "text" },
+          { name: "second_li", selector: "li:nth-child(2)", type: "text" }
+        ]
+
+        result = described_class.call(doc, fields: fields)
+
+        expect(result[:success]).to be true
+        expect(result[:data]["first_li"]).to eq("Feature 1")
+        expect(result[:data]["last_li"]).to eq("Feature 3")
+        expect(result[:data]["second_li"]).to eq("Feature 2")
+      end
+
+      it "handles descendant selectors" do
+        field = {
+          name: "nested",
+          selector: ".product .description strong",
+          type: "text"
         }
 
         result = described_class.call(doc, [field])
 
         expect(result[:success]).to be true
-        # Unknown types default to text extraction
-        expect(result[:data]["unknown_type"]).to eq("Page Title")
-      end
-    end
-
-    context "complex selectors" do
-      it "handles descendant selectors" do
-        field = { name: "nested", selector: ".product .name", type: "text" }
-
-        result = described_class.call(doc, [field])
-
-        expect(result[:success]).to be true
-        expect(result[:data]["nested"]).to eq("Product Name")
+        expect(result[:data]["nested"]).to eq("bold text")
       end
 
       it "handles attribute selectors" do
-        field = { name: "specific_product", selector: "[data-id='456'] .name", type: "text" }
+        field = ExtractedField.new(
+          name: "specific_product",
+          selector: '[data-id="456"] .name',
+          type: "text"
+        )
 
-        result = described_class.call(doc, [field])
+        result = described_class.call(doc, fields: [field])
 
         expect(result[:success]).to be true
         expect(result[:data]["specific_product"]).to eq("Another Product")
       end
 
       it "handles combinators" do
-        field = { name: "adjacent", selector: ".product + .product .name", type: "text" }
+        html_with_siblings = <<~HTML
+          <div>
+            <h1>Title</h1>
+            <p class="after-h1">Text after H1</p>
+            <p>Another paragraph</p>
+          </div>
+        HTML
+        doc_siblings = Nokogiri::HTML(html_with_siblings)
 
-        result = described_class.call(doc, [field])
+        field = ExtractedField.new(
+          name: "sibling",
+          selector: "h1 + p",
+          type: "text"
+        )
+
+        result = described_class.call(doc_siblings, fields: [field])
 
         expect(result[:success]).to be true
-        expect(result[:data]["adjacent"]).to eq("Another Product")
+        expect(result[:data]["sibling"]).to eq("Text after H1")
+      end
+    end
+
+    context "transformation options" do
+      it "applies text transformations" do
+        field = ExtractedField.new(
+          name: "uppercase_title",
+          selector: "h1.title",
+          type: "text",
+          transform: ->(text) { text.upcase }
+        )
+
+        result = described_class.call(doc, fields: [field])
+
+        expect(result[:success]).to be true
+        expect(result[:data]["uppercase_title"]).to eq("PAGE TITLE")
+      end
+
+      it "applies regex extraction" do
+        field = ExtractedField.new(
+          name: "price_number",
+          selector: ".price",
+          type: "text",
+          pattern: /\$([\d.]+)/
+        )
+
+        result = described_class.call(doc, fields: [field])
+
+        expect(result[:success]).to be true
+        expect(result[:data]["price_number"]).to eq("99.99")
+      end
+
+      it "handles transformation errors" do
+        field = ExtractedField.new(
+          name: "error_transform",
+          selector: ".title",
+          type: "text",
+          transform: ->(_text) { raise "Transform error" }
+        )
+
+        result = described_class.call(doc, fields: [field])
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("Transform error")
+      end
+    end
+
+    context "performance" do
+      let(:large_html) do
+        items = (1..1000).map { |i| "<li class='item'>Item #{i}</li>" }.join
+        "<html><body><ul>#{items}</ul></body></html>"
+      end
+      let(:large_doc) { Nokogiri::HTML(large_html) }
+
+      it "efficiently extracts from large documents" do
+        field = ExtractedField.new(
+          name: "items",
+          selector: ".item",
+          type: "text",
+          multiple: true
+        )
+
+        start_time = Time.current
+        result = described_class.call(large_doc, fields: [field])
+        elapsed = Time.current - start_time
+
+        expect(result[:success]).to be true
+        expect(result[:data]["items"].length).to eq(1000)
+        expect(elapsed).to be < 1.0 # Should process 1000 items in under 1 second
+      end
+
+      it "caches selector results" do
+        fields = [
+          ExtractedField.new(name: "title1", selector: ".title", type: "text"),
+          ExtractedField.new(name: "title2", selector: ".title", type: "html"),
+          ExtractedField.new(name: "title3", selector: ".title", type: "attribute", attribute: "class")
+        ]
+
+        # Should only query the selector once despite three fields using it
+        expect(doc).to receive(:css).with(".title").once.and_call_original
+
+        described_class.call(doc, fields: fields)
       end
     end
 
     context "edge cases" do
       it "handles empty text nodes" do
-        empty_html = "<div class='empty'></div>"
+        empty_html = '<p class="empty"></p><p class="whitespace">   </p>'
         empty_doc = Nokogiri::HTML(empty_html)
-        field = { name: "empty", selector: ".empty", type: "text" }
 
-        result = described_class.call(empty_doc, [field])
+        fields = [
+          ExtractedField.new(name: "empty", selector: ".empty", type: "text"),
+          ExtractedField.new(name: "whitespace", selector: ".whitespace", type: "text")
+        ]
+
+        result = described_class.call(empty_doc, fields: fields)
 
         expect(result[:success]).to be true
         expect(result[:data]["empty"]).to eq("")
+        expect(result[:data]["whitespace"]).to eq("")
       end
 
       it "handles special characters in selectors" do
-        special_html = "<div class='test-class_name'>Special Content</div>"
+        special_html = '<div id="test:id" class="test.class">Content</div>'
         special_doc = Nokogiri::HTML(special_html)
-        field = { name: "special", selector: ".test-class_name", type: "text" }
 
-        result = described_class.call(special_doc, [field])
+        field = ExtractedField.new(
+          name: "special",
+          selector: '#test\\:id',
+          type: "text"
+        )
+
+        result = described_class.call(special_doc, fields: [field])
 
         expect(result[:success]).to be true
-        expect(result[:data]["special"]).to eq("Special Content")
+        expect(result[:data]["special"]).to eq("Content")
       end
 
       it "handles very long text content" do
-        long_text = "a" * 10_000
-        long_html = "<div class='long'>#{long_text}</div>"
+        long_text = "x" * 10_000
+        long_html = "<p class='long'>#{long_text}</p>"
         long_doc = Nokogiri::HTML(long_html)
-        field = { name: "long", selector: ".long", type: "text" }
 
-        result = described_class.call(long_doc, [field])
+        field = ExtractedField.new(name: "long", selector: ".long", type: "text")
+
+        result = described_class.call(long_doc, fields: [field])
 
         expect(result[:success]).to be true
-        expect(result[:data]["long"]).to eq(long_text)
+        expect(result[:data]["long"].length).to eq(10_000)
+      end
+
+      it "handles circular references in transform" do
+        field = ExtractedField.new(
+          name: "circular",
+          selector: ".title",
+          type: "text",
+          transform: ->(text, context) { context[:data]["circular"] || text }
+        )
+
+        result = described_class.call(doc, fields: [field])
+
+        expect(result[:success]).to be true
+        expect(result[:data]["circular"]).to eq("Page Title")
       end
     end
   end
