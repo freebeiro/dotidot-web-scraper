@@ -58,6 +58,10 @@ group :development, :test do
   # Additional testing gems
   gem "shoulda-matchers", "~> 5.3" # Additional RSpec matchers
   gem "webmock", "~> 3.18" # HTTP request stubbing
+  
+  # Code coverage
+  gem "simplecov", "~> 0.22", require: false
+  gem "simplecov-lcov", "~> 0.8", require: false
 end
 
 group :development do

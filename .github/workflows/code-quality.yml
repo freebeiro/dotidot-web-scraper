@@ -1,0 +1,45 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Fetch all history for all branches
+    
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2.6'
+        bundler-cache: true
+    
+    - name: Run RuboCop with GitHub annotations
+      uses: reviewdog/action-rubocop@v2
+      with:
+        rubocop_version: gemfile
+        reporter: github-pr-check
+        fail_on_error: true
+    
+    - name: Check code complexity
+      run: |
+        gem install rubycritic
+        rubycritic app lib --minimum-score 90 --no-browser --format console
+    
+    - name: Check for code smells with Reek
+      run: |
+        gem install reek
+        reek app lib
+    
+    - name: Check test coverage
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/dotidot_scraper_test
+      run: |
+        bundle exec rspec
+        # Add coverage threshold check here if using SimpleCov
