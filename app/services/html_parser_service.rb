@@ -26,7 +26,17 @@ class HtmlParserService
 
   def call
     validate_content
-    parse_html
+    document = parse_html
+
+    {
+      success: true,
+      doc: document
+    }
+  rescue ScraperErrors::ValidationError, ScraperErrors::ParsingError => e
+    {
+      success: false,
+      error: e.message
+    }
   end
 
   private

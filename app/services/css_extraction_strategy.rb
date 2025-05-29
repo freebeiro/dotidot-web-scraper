@@ -26,8 +26,8 @@ class CssExtractionStrategy
     /vbscript:/i
   ].freeze
 
-  def self.extract(document, fields)
-    new(document, fields).extract
+  def self.call(document, fields)
+    new(document, fields).call
   end
 
   def initialize(document, fields)
@@ -35,10 +35,10 @@ class CssExtractionStrategy
     @fields = normalize_fields(fields)
   end
 
-  def extract
+  def call
     validate_inputs
 
-    @fields.map do |field|
+    results = @fields.map do |field|
       extract_single_field(field)
     rescue => e
       Rails.logger.error("Error extracting field '#{field[:selector]}': #{e.message}")
@@ -48,6 +48,27 @@ class CssExtractionStrategy
         error: e.message
       )
     end
+
+    # Convert to hash format expected by tests
+    data = {}
+    results.each do |result|
+      next unless result.success?
+
+      # Extract field name from selector or use index
+      field_name = @fields.find { |f| f[:selector] == result.selector }&.dig(:name) || result.selector
+      data[field_name] = result.value
+    end
+
+    {
+      success: true,
+      data: data,
+      results: results
+    }
+  rescue => e
+    {
+      success: false,
+      error: e.message
+    }
   end
 
   private
