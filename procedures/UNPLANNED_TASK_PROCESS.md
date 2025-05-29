@@ -29,28 +29,39 @@ When a new unplanned task is identified:
    priority: "medium"
    ```
 
-### **Step 2: Follow Standard 4-Step Process**
+### **Step 2: Follow EXACT Same Workflow as Planned Tasks**
 
-Even unplanned tasks MUST follow the standard process:
+Unplanned tasks MUST follow the **IDENTICAL workflow** as planned tasks:
 
-#### **📋 Step A: Live Rule Filtering**
-- Scan relevant rule files
-- Cherry-pick applicable rules
-- Document filtering inline
+#### **📋 Step A: Live Rule Filtering (MANDATORY)**
+```markdown
+## Live Rule Filtering for TASK_XXX
 
-#### **🛠️ Step B: Implementation**
-- Implement following filtered rules
-- Keep changes focused and atomic
+### Scanning rule files...
+- Checking testing_strategy_rules.md...
+  - ✅ CHERRY-PICKED: "Run full test suite before marking complete"
+  - ✅ CHERRY-PICKED: "Fix failing tests incrementally"
+- Checking code_quality_rules.md...
+  - ✅ CHERRY-PICKED: "All code must pass RuboCop"
+```
+
+**Document the actual rules you're following!**
+
+#### **🛠️ Step B: Implementation Plan**
+- Create implementation checklist BEFORE starting
+- Break down into subtasks
+- Follow filtered rules strictly
 
 #### **🧪 Step C: Testing & Validation**
-- Automated tests (if applicable)
-- Manual verification
-- Document test commands
+- Run all tests as per testing rules
+- Validate against acceptance criteria
+- Document all test commands and results
 
 #### **📝 Step D: Documentation & Commit**
-- Commit with descriptive message
-- Update progress.md with completion
-- Note any impacts on planned work
+- Create proper documentation file
+- Update task log
+- Commit with standard format
+- Update progress tracking
 
 ### **Step 3: Update Progress Tracking**
 
@@ -140,10 +151,57 @@ If unplanned task arises BETWEEN steps:
 4. **Easy Handoff**: Other AIs can see full history
 5. **Learning Record**: Documents decisions and rationale
 
+## 📖 Example: How TASK_003 Should Have Been Handled
+
+### Step 1: Document the Task
+```markdown
+### Task U3: Debug and Fix 156+ Failing Specs
+**Requested**: 2025-05-29 14:00
+**Reason**: Blocking Task #1 verification
+**Status**: Pending
+**Impact**: Yes - blocks Task #1 completion
+```
+
+### Step 2A: Live Rule Filtering
+```markdown
+## Live Rule Filtering for TASK_003
+
+### Scanning testing_strategy_rules.md...
+- ✅ CHERRY-PICKED: "Fix failing tests incrementally, one file at a time"
+- ✅ CHERRY-PICKED: "Never modify test expectations without understanding why they're failing"
+- ✅ CHERRY-PICKED: "Run focused specs first: bundle exec rspec spec/file_spec.rb"
+
+### Scanning code_quality_rules.md...
+- ✅ CHERRY-PICKED: "Extract complex methods when exceeding RuboCop limits"
+- ✅ CHERRY-PICKED: "Use service objects for business logic"
+```
+
+### Step 2B: Implementation Plan
+- [ ] Identify root cause of failures
+- [ ] Fix service API inconsistencies
+- [ ] Update specs to match implementation
+- [ ] Run RuboCop and fix violations
+- [ ] Verify all tests pass
+
+### Step 2C: Testing & Validation
+```bash
+bundle exec rspec --fail-fast  # Find first failure
+bundle exec rspec spec/services/  # Fix service specs first
+bundle exec rubocop --autocorrect  # Fix style issues
+bundle exec rspec  # Full suite
+```
+
+### Step 2D: Documentation
+- Created procedures/unplanned_tasks/TASK_003_DEBUG_FIX_SPECS.md
+- Updated task log
+- Committed with proper message
+
 ## 🚨 Important Notes
 
 - **Never skip documentation** for "quick fixes"
-- **Always follow 4-step process** even for small changes
+- **Always follow the EXACT workflow** as planned tasks
+- **Live rule filtering is MANDATORY** - not optional
+- **Create implementation plan BEFORE coding**
 - **Update progress.md** for every unplanned task
 - **Use descriptive commit messages** that reference the task
 - **Consider impact** on current/future planned work

@@ -114,8 +114,9 @@ This guide outlines the structured process for initiating a new project using a 
     **MANDATORY Procedure Files (Always Generated):**
     - `procedures/LIVE_RULE_FILTERING_PROCESS.md` - Live rule filtering with continuous enforcement throughout project
     - `procedures/AI_HANDOFF_INSTRUCTIONS.md` - Complete instructions for AI continuity
-    - `procedures/UNPLANNED_TASK_PROCESS.md` - How to handle unplanned work
+    - `procedures/UNPLANNED_TASK_PROCESS.md` - How to handle unplanned work WITH SAME WORKFLOW as planned tasks
     - `procedures/DEBUGGING_WORKFLOW.md` - DEBUGGING_TASK workflow for error handling and test failures
+    - `procedures/unplanned_tasks/TEMPLATE_UNPLANNED_TASK.md` - Template ensuring consistent workflow
     
     **Testing Guidelines:** When generating testing guidelines (if testing was requested), the AI must ensure the draft covers standard levels (Unit, Integration, System/E2E) and include recommendations for testing infrastructure appropriate to the project type and classification.
     

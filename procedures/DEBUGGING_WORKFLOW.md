@@ -18,10 +18,21 @@ Enter debugging mode immediately when ANY of these conditions occur:
 
 ## 🔄 **DEBUGGING_TASK Classification**
 
-- **Task Type**: `DEBUGGING_TASK` (separate from unplanned tasks)
+- **Task Type**: `DEBUGGING_TASK` (special type of unplanned task)
 - **Priority**: Always `HIGH` (blocks development progress)
 - **Documentation**: Must be logged for future reference
 - **Outcome**: Clean solution applied to feature branch
+- **Workflow**: FOLLOWS SAME 4-STEP PROCESS AS ALL TASKS
+
+## ⚠️ **CRITICAL: Same Workflow Applies**
+
+**DEBUGGING TASKS MUST FOLLOW THE STANDARD 4-STEP WORKFLOW:**
+1. **Live Rule Filtering** - Cherry-pick relevant rules
+2. **Implementation** - Debug systematically with plan
+3. **Testing & Validation** - Verify fix completely
+4. **Documentation & Commit** - Clean solution only
+
+This is NOT an exception to the workflow - it's a specific application of it!
 
 ## 📋 **Step-by-Step Debugging Procedure**
 
@@ -51,27 +62,46 @@ git checkout -b debug/[issue-description]
 # Example: debug/fix-integration-test-failures
 ```
 
-### **Phase 2: Safe Experimentation**
+### **Phase 2: Safe Experimentation (Following Standard Workflow)**
 
-#### Step 2A: Reproduce the Issue
+#### Step 2A: Live Rule Filtering (MANDATORY)
+```markdown
+## Live Rule Filtering for DEBUG_TASK
+
+### Scanning rule files...
+- Checking testing_strategy_rules.md...
+  - ✅ CHERRY-PICKED: "Fix failing tests incrementally, one file at a time"
+  - ✅ CHERRY-PICKED: "Never skip tests, fix them properly"
+- Checking code_quality_rules.md...
+  - ✅ CHERRY-PICKED: "Extract complex methods when needed"
+  - ❌ IGNORED: "Documentation requirements" (not relevant for debugging)
+```
+
+**IMPORTANT**: Even in debug mode, follow the same structured workflow!
+
+#### Step 2B: Implementation Plan
+```markdown
+## Debug Implementation Plan
+- [ ] Reproduce the issue consistently
+- [ ] Identify root cause (not symptoms)
+- [ ] List 3+ possible solutions
+- [ ] Choose simplest approach first
+- [ ] Test fix thoroughly
+```
+
+#### Step 2C: Debug Implementation
+- **Follow filtered rules** - apply only cherry-picked rules
+- **Try solutions systematically** - debug branch is safe
+- **Commit frequently** - `git commit -m "debug: trying approach X"`
+- **Document learnings** - what worked, what didn't, why
+
+#### Step 2D: Reproduce & Analyze
 ```bash
 # Document exact reproduction steps
 bundle exec rubocop -A && bundle exec rspec
 # Or whatever command is failing
 # Copy full output to debug_log.md
 ```
-
-#### Step 2B: Analyze & Hypothesize
-- **Identify root cause** (not just symptoms)
-- **List possible solutions** (at least 3 approaches)
-- **Estimate complexity** of each approach
-- **Choose starting approach** (simplest first)
-
-#### Step 2C: Experiment Freely
-- **Try solutions without fear** - debug branch is disposable
-- **Break things** - learn what doesn't work
-- **Commit frequently** - `git commit -m "debug: trying approach X"`
-- **Document learnings** - what worked, what didn't, why
 
 ### **Phase 3: Solution Validation**
 
