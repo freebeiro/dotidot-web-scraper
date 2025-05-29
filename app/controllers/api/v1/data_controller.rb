@@ -72,10 +72,7 @@ module Api
       end
 
       def render_success(data)
-        render json: {
-          success: true,
-          data: data
-        }, status: :ok
+        render json: data, status: :ok
       end
 
       def render_error(error_message)

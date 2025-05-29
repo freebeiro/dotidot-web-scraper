@@ -26,9 +26,7 @@ RSpec.describe "Api::V1::Data", type: :request do
         expect(response).to have_http_status(:ok)
 
         json = response.parsed_body
-        expect(json["success"]).to be true
-        expect(json["data"]).to include("title" => "Example Title")
-        expect(json["data"]).to include("description" => "Example Description")
+        expect(json).to eq(scraped_data)
       end
 
       it "calls the orchestrator service with correct parameters" do
