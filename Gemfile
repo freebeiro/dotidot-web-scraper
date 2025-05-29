@@ -58,7 +58,7 @@ group :development, :test do
   gem "rspec-rails", "~> 6.0"
 
   # Additional testing gems
-  gem "shoulda-matchers", "~> 5.3" # Additional RSpec matchers
+  gem "shoulda-matchers", "~> 6.5" # Additional RSpec matchers
   gem "webmock", "~> 3.18" # HTTP request stubbing
 
   # Code coverage - temporarily disabled
