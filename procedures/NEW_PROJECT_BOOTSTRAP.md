@@ -95,6 +95,7 @@ This guide outlines the structured process for initiating a new project using a 
     d. **Integration Check**: Rules must work together without conflicts across different categories
     e. **Completeness Verification**: Cover all essential aspects of the technology/practice area
     f. **MANDATORY: Generate AI Workflow Rules** - Always create `rules/ai_workflow_rules.md` with continuous enforcement
+    g. **MANDATORY: Add Quality Enforcement** - Include automated pre-commit hooks and zero tolerance policies
     
     **Rule File Requirements:**
     - Use checkbox format for actionable items
@@ -106,6 +107,8 @@ This guide outlines the structured process for initiating a new project using a 
     
     **MANDATORY Rule Files (Always Generated):**
     - `rules/ai_workflow_rules.md` - Code reuse, modular development, NO NEW/UPDATED files, 4-step process enforcement
+    - `rules/code_quality_rules.md` - MUST include automated pre-commit hooks and zero tolerance enforcement
+    - `rules/testing_strategy_rules.md` - MUST include mandatory rspec/rubocop workflows and emergency recovery protocols
     - At least 3-5 technology-specific rule files based on project requirements in `rules/` directory
     
     **MANDATORY Procedure Files (Always Generated):**
@@ -115,6 +118,23 @@ This guide outlines the structured process for initiating a new project using a 
     - `procedures/DEBUGGING_WORKFLOW.md` - DEBUGGING_TASK workflow for error handling and test failures
     
     **Testing Guidelines:** When generating testing guidelines (if testing was requested), the AI must ensure the draft covers standard levels (Unit, Integration, System/E2E) and include recommendations for testing infrastructure appropriate to the project type and classification.
+    
+    **MANDATORY: Automated Quality Enforcement Setup**
+    For ALL projects with testing frameworks, the AI MUST generate and set up:
+    - **Pre-commit hook** file at `.git/hooks/pre-commit` (executable)
+    - **Mandatory rspec/linting checks** before any commits are allowed
+    - **Zero tolerance policy** documentation for failing tests/style violations
+    - **Emergency recovery protocols** for multiple failing tests situations
+    - **Incremental fixing workflows** to prevent accumulation of technical debt
+    
+    **Pre-commit Hook Requirements:**
+    ```bash
+    #!/bin/sh
+    # Run tests and style checks
+    bundle exec rspec || exit 1
+    bundle exec rubocop || exit 1
+    echo "✅ All quality checks passed!"
+    ```
 
 8.  **AI Presents Draft Rules & Prompts User to Save:** "Based on research into current best practices, here is the draft content for each rule file. Please review, adjust if needed, and save these to a `rules/` directory. Let me know when done."
 
@@ -213,6 +233,9 @@ This guide outlines the structured process for initiating a new project using a 
     **Bootstrap Completion Checklist:**
     - [ ] All rule files generated with proper research and structure
     - [ ] **MANDATORY: rules/ai_workflow_rules.md created** with continuous enforcement
+    - [ ] **MANDATORY: rules/code_quality_rules.md created** with automated enforcement sections
+    - [ ] **MANDATORY: rules/testing_strategy_rules.md created** with zero tolerance policies
+    - [ ] **MANDATORY: Pre-commit hook setup** at `.git/hooks/pre-commit` (executable)
     - [ ] **MANDATORY: procedures/LIVE_RULE_FILTERING_PROCESS.md created** with 4-step process
     - [ ] **MANDATORY: procedures/AI_HANDOFF_INSTRUCTIONS.md created** for AI continuity
     - [ ] **MANDATORY: procedures/UNPLANNED_TASK_PROCESS.md created** for handling unplanned work
@@ -221,10 +244,8 @@ This guide outlines the structured process for initiating a new project using a 
     - [ ] Memory bank files created and populated
     - [ ] Live rule filtering process established
     - [ ] Quality gates and success criteria defined
-    - [ ] **procedures/AI_HANDOFF_INSTRUCTIONS.md generated** (see step 17)
-    - [ ] **procedures/LIVE_RULE_FILTERING_PROCESS.md generated** (see step 18)
-    - [ ] **procedures/UNPLANNED_TASK_PROCESS.md generated** (see step 19)
-    - [ ] **procedures/DEBUGGING_WORKFLOW.md generated** (see step 20)
+    - [ ] **Automated quality enforcement mechanisms** (pre-commit hooks, zero tolerance policies)
+    - [ ] **Emergency recovery protocols** documented for test failures
     - [ ] **All enforcement mechanisms automatically created**
     
 17. **AI Generates Handoff Instructions:** The AI automatically creates `procedures/AI_HANDOFF_INSTRUCTIONS.md` file containing complete instructions for any future AI assistant to seamlessly continue the project.
