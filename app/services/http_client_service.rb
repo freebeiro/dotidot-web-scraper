@@ -43,15 +43,7 @@ class HttpClientService
     begin
       attempt += 1
       response = perform_request
-
-      {
-        success: true,
-        body: response[:body],
-        status: response[:status],
-        headers: response[:headers],
-        response_time: Time.current - start_time,
-        attempts: attempt
-      }
+      build_success_response(response, start_time, attempt)
     rescue *RETRYABLE_ERRORS => e
       if attempt < @max_retries
         Rails.logger.warn("HTTP request failed (attempt #{attempt}/#{@max_retries}): #{e.message}")
@@ -59,24 +51,34 @@ class HttpClientService
         delay = [delay * 2, MAX_RETRY_DELAY].min
         retry
       else
-        {
-          success: false,
-          error: "Failed to fetch URL after #{@max_retries} attempts: #{e.message}",
-          attempts: attempt,
-          response_time: Time.current - start_time
-        }
+        build_error_response("Failed after #{@max_retries} attempts: #{e.message}", attempt, start_time)
       end
     rescue => e
-      {
-        success: false,
-        error: e.message,
-        attempts: attempt,
-        response_time: Time.current - start_time
-      }
+      build_error_response(e.message, attempt, start_time)
     end
   end
 
   private
+
+  def build_success_response(response, start_time, attempt)
+    {
+      success: true,
+      body: response[:body],
+      status: response[:status],
+      headers: response[:headers],
+      response_time: Time.current - start_time,
+      attempts: attempt
+    }
+  end
+
+  def build_error_response(message, attempt, start_time)
+    {
+      success: false,
+      error: message,
+      attempts: attempt,
+      response_time: Time.current - start_time
+    }
+  end
 
   def perform_request
     response = HTTP
