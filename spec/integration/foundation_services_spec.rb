@@ -63,17 +63,19 @@ RSpec.describe "Foundation Services Integration" do
       # Step 3: Parse HTML
       parse_result = HtmlParserService.call(fetch_result[:body])
       expect(parse_result[:success]).to be true
-      expect(parse_result[:document]).to be_a(Nokogiri::HTML::Document)
+      expect(parse_result[:doc]).to be_a(Nokogiri::HTML::Document)
 
       # Step 4: Extract data using current API format
       fields = [
         { name: "page_title", selector: "title", type: "text" },
         { name: "site_title", selector: "h1.site-title", type: "text" },
         { name: "product_names", selector: ".product-name", type: "text", multiple: true },
-        { name: "product_prices", selector: ".price", type: "text", multiple: true }
+        { name: "product_prices", selector: ".price", type: "text", multiple: true },
+        { name: "product_ids", selector: ".product", type: "attribute", attribute: "data-id", multiple: true },
+        { name: "stock_counts", selector: ".stock .count", type: "text", multiple: true }
       ]
 
-      extract_result = CssExtractionStrategy.call(parse_result[:document], fields)
+      extract_result = CssExtractionStrategy.call(parse_result[:doc], fields)
       expect(extract_result[:success]).to be true
 
       data = extract_result[:data]

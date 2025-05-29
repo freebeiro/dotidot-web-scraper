@@ -79,13 +79,14 @@ class CssExtractionStrategy
     Array(fields).map do |field|
       case field
       when String
-        { selector: field, name: field }
+        { selector: field, name: field, type: "text" }
       when Hash
-        field = field.stringify_keys if field.respond_to?(:stringify_keys)
-        {
-          selector: field["selector"] || field[:selector],
-          name: field["name"] || field[:name] || field["selector"] || field[:selector]
-        }
+        # Preserve all hash keys, just ensure consistent format
+        normalized = field.dup
+        normalized[:selector] ||= normalized["selector"]
+        normalized[:name] ||= normalized["name"] || normalized[:selector] || normalized["selector"]
+        normalized[:type] ||= normalized["type"] || "text"
+        normalized
       else
         raise ScraperErrors::ValidationError, "Invalid field format: #{field.class}"
       end
@@ -119,7 +120,7 @@ class CssExtractionStrategy
 
     begin
       elements = @document.css(selector)
-      value = extract_value_from_elements(elements)
+      value = extract_value_from_elements(elements, field)
 
       ExtractedField.new(
         selector: selector,
@@ -131,14 +132,33 @@ class CssExtractionStrategy
     end
   end
 
-  def extract_value_from_elements(elements)
+  def extract_value_from_elements(elements, field)
     return nil if elements.empty?
 
-    if elements.length == 1
-      clean_text(elements.first.text)
+    extraction_type = field[:type] || "text"
+    multiple = field[:multiple] || false
+
+    if multiple
+      # Multiple elements requested - return array
+      elements.map { |element| extract_single_value(element, extraction_type, field) }
     else
-      # Multiple elements - return array of text content
-      elements.map { |element| clean_text(element.text) }
+      # Single element requested - return first match only
+      extract_single_value(elements.first, extraction_type, field)
+    end
+  end
+
+  def extract_single_value(element, extraction_type, field)
+    case extraction_type
+    when "text"
+      clean_text(element.text)
+    when "html"
+      element.inner_html
+    when "attribute"
+      attribute_name = field[:attribute]
+      raise ScraperErrors::ValidationError, "Attribute name required for attribute extraction" unless attribute_name
+      element[attribute_name]
+    else
+      clean_text(element.text) # Default to text
     end
   end
 
