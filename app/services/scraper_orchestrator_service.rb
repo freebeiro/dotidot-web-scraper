@@ -12,15 +12,17 @@ class ScraperOrchestratorService
       url_validator: UrlValidatorService,
       http_client: HttpClientService,
       html_parser: HtmlParserService,
-      css_strategy: CssExtractionStrategy
+      css_strategy: CssExtractionStrategy,
+      meta_strategy: MetaExtractionStrategy
     ).call(url: url, fields: fields)
   end
 
-  def initialize(url_validator:, http_client:, html_parser:, css_strategy:)
+  def initialize(url_validator:, http_client:, html_parser:, css_strategy:, meta_strategy:)
     @url_validator = url_validator
     @http_client = http_client
     @html_parser = html_parser
     @css_strategy = css_strategy
+    @meta_strategy = meta_strategy
   end
 
   def call(url:, fields: [])
@@ -56,7 +58,7 @@ class ScraperOrchestratorService
 
   private
 
-  attr_reader :url_validator, :http_client, :html_parser, :css_strategy
+  attr_reader :url_validator, :http_client, :html_parser, :css_strategy, :meta_strategy
 
   def validate_inputs!(url)
     raise ScraperErrors::ValidationError, "URL is required" if url.nil? || url.empty?
@@ -93,17 +95,83 @@ class ScraperOrchestratorService
   end
 
   def extract_data(document, fields)
-    return {} if fields.empty?
+    return {} if fields.nil? || (fields.respond_to?(:empty?) && fields.empty?)
 
-    # Convert fields hash to array format expected by CSS strategy
-    fields_array = fields.is_a?(Hash) ? convert_hash_to_fields_array(fields) : fields
+    # Convert fields hash to array format if needed
+    fields_array = if fields.is_a?(Hash)
+                     convert_hash_to_fields_array(fields)
+                   elsif fields.is_a?(Array)
+                     fields
+                   else
+                     raise ScraperErrors::ValidationError, "Invalid fields format: expected Hash or Array"
+                   end
 
-    # Use CSS strategy for all extractions
-    result = css_strategy.call(document, fields_array)
+    # Separate CSS selector fields from meta tag fields
+    css_fields, meta_fields = partition_fields(fields_array)
 
-    raise ScraperErrors::ExtractionError, result[:error] unless result[:success]
+    # Extract data using appropriate strategies
+    data = {}
 
-    result[:data]
+    # Extract CSS selector fields
+    if css_fields.any?
+      css_result = css_strategy.call(document, css_fields)
+      raise ScraperErrors::ExtractionError, css_result[:error] unless css_result[:success]
+
+      data.merge!(css_result[:data])
+    end
+
+    # Extract meta tag fields
+    if meta_fields.any?
+      meta_result = meta_strategy.call(document, meta_fields)
+      raise ScraperErrors::ExtractionError, meta_result[:error] unless meta_result[:success]
+
+      data.merge!(meta_result[:data])
+    end
+
+    data
+  end
+
+  def partition_fields(fields)
+    css_fields = []
+    meta_fields = []
+
+    fields.each do |field|
+      if field_is_meta_tag?(field)
+        meta_fields << build_meta_field(field)
+      else
+        css_fields << field
+      end
+    end
+
+    [css_fields, meta_fields]
+  end
+
+  def field_is_meta_tag?(field)
+    # A field is a meta tag if it explicitly specifies type: "meta"
+    # or if the name starts with "meta:" prefix
+    return true if field[:type] == "meta" || field["type"] == "meta"
+
+    # Check the name field for meta: prefix
+    name = field[:name] || field["name"] || ""
+    name.to_s.start_with?("meta:")
+  end
+
+  def build_meta_field(field)
+    name = field[:name] || field["name"] || ""
+    meta_field = {}
+
+    if name.to_s.start_with?("meta:")
+      meta_field[:name] = name.sub(/^meta:/, "")
+      meta_field[:original_name] = name
+    else
+      meta_field[:name] = name
+    end
+
+    # Copy type if present
+    type = field[:type] || field["type"]
+    meta_field[:type] = type if type
+
+    meta_field
   end
 
   def cache_results(_url, _fields, _data)

@@ -10,6 +10,8 @@ module ScraperHelpers
     fields_hash.map do |name, config|
       field_config = config.is_a?(Hash) ? config.dup : { selector: config }
       field_config[:name] = name.to_s
+      # Ensure meta fields have a selector (even if it won't be used)
+      field_config[:selector] = name.to_s if field_config[:type] == "meta" && !field_config[:selector]
       field_config
     end
   end
