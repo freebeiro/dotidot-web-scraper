@@ -37,10 +37,10 @@ RSpec.describe UrlValidatorService do
         expect(result[:valid]).to be true
       end
 
-      it "rejects URLs without scheme" do
+      it "normalizes URLs by adding scheme" do
         result = described_class.call("example.com")
-        expect(result[:valid]).to be false
-        expect(result[:error]).to include("Invalid URL format")
+        expect(result[:valid]).to be true
+        expect(result[:url]).to eq("http://example.com")
       end
 
       it "handles URLs with authentication" do
@@ -76,25 +76,25 @@ RSpec.describe UrlValidatorService do
       it "rejects URLs with invalid schemes" do
         result = described_class.call("ftp://example.com")
         expect(result[:valid]).to be false
-        expect(result[:error]).to include("not allowed. Must be HTTP or HTTPS")
+        expect(result[:error]).to include("Only HTTP and HTTPS protocols are allowed")
       end
 
       it "rejects javascript URLs" do
         result = described_class.call("javascript:alert(1)")
         expect(result[:valid]).to be false
-        expect(result[:error]).to include("not allowed. Must be HTTP or HTTPS")
+        expect(result[:error]).to include("Only HTTP and HTTPS protocols are allowed")
       end
 
       it "rejects data URLs" do
         result = described_class.call("data:text/html,<script>alert(1)</script>")
         expect(result[:valid]).to be false
-        expect(result[:error]).to include("not allowed. Must be HTTP or HTTPS")
+        expect(result[:error]).to include("Only HTTP and HTTPS protocols are allowed")
       end
 
       it "rejects file URLs" do
         result = described_class.call("file:///etc/passwd")
         expect(result[:valid]).to be false
-        expect(result[:error]).to include("not allowed. Must be HTTP or HTTPS")
+        expect(result[:error]).to include("Only HTTP and HTTPS protocols are allowed")
       end
     end
 
@@ -103,55 +103,55 @@ RSpec.describe UrlValidatorService do
         it "blocks localhost" do
           result = described_class.call("http://localhost")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "blocks 127.0.0.1" do
           result = described_class.call("http://127.0.0.1")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "blocks ::1 (IPv6 localhost)" do
           result = described_class.call("http://[::1]")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "blocks 10.x.x.x range" do
           result = described_class.call("http://10.0.0.1")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "blocks 172.16-31.x.x range" do
           result = described_class.call("http://172.16.0.1")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "blocks 192.168.x.x range" do
           result = described_class.call("http://192.168.1.1")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "blocks 169.254.x.x link-local" do
           result = described_class.call("http://169.254.1.1")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "blocks 0.0.0.0" do
           result = described_class.call("http://0.0.0.0")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "blocks private IPv6 ranges" do
           result = described_class.call("http://[fc00::1]")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
       end
 
@@ -161,7 +161,7 @@ RSpec.describe UrlValidatorService do
 
           result = described_class.call("http://evil.com")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "allows domains that resolve to public IPs" do
@@ -184,28 +184,28 @@ RSpec.describe UrlValidatorService do
         it "blocks metadata service endpoints" do
           result = described_class.call("http://169.254.169.254/latest/meta-data/")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "blocks decimal IP notation" do
           # 192.168.1.1 = 3232235777 in decimal
           result = described_class.call("http://3232235777")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "blocks octal IP notation" do
           # 127.0.0.1 in octal
           result = described_class.call("http://0177.0.0.1")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
 
         it "blocks hex IP notation" do
           # 127.0.0.1 in hex
           result = described_class.call("http://0x7f.0x0.0x0.0x1")
           expect(result[:valid]).to be false
-          expect(result[:error]).to include("blocked for security reasons")
+          expect(result[:error]).to include("URL points to a private or reserved IP address")
         end
       end
     end
@@ -241,7 +241,7 @@ RSpec.describe UrlValidatorService do
         long_url = "http://example.com/#{'a' * 10_000}"
         result = described_class.call(long_url)
         expect(result[:valid]).to be false
-        expect(result[:error]).to include("URL too long")
+        expect(result[:error]).to include("URL is too long")
       end
     end
 

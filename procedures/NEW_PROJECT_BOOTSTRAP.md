@@ -112,6 +112,7 @@ This guide outlines the structured process for initiating a new project using a 
     - `procedures/LIVE_RULE_FILTERING_PROCESS.md` - Live rule filtering with continuous enforcement throughout project
     - `procedures/AI_HANDOFF_INSTRUCTIONS.md` - Complete instructions for AI continuity
     - `procedures/UNPLANNED_TASK_PROCESS.md` - How to handle unplanned work
+    - `procedures/DEBUGGING_WORKFLOW.md` - DEBUGGING_TASK workflow for error handling and test failures
     
     **Testing Guidelines:** When generating testing guidelines (if testing was requested), the AI must ensure the draft covers standard levels (Unit, Integration, System/E2E) and include recommendations for testing infrastructure appropriate to the project type and classification.
 
@@ -215,6 +216,7 @@ This guide outlines the structured process for initiating a new project using a 
     - [ ] **MANDATORY: procedures/LIVE_RULE_FILTERING_PROCESS.md created** with 4-step process
     - [ ] **MANDATORY: procedures/AI_HANDOFF_INSTRUCTIONS.md created** for AI continuity
     - [ ] **MANDATORY: procedures/UNPLANNED_TASK_PROCESS.md created** for handling unplanned work
+    - [ ] **MANDATORY: procedures/DEBUGGING_WORKFLOW.md created** for DEBUGGING_TASK workflow
     - [ ] procedures/PROJECT_PLAN.md created with detailed, testable steps
     - [ ] Memory bank files created and populated
     - [ ] Live rule filtering process established
@@ -222,6 +224,7 @@ This guide outlines the structured process for initiating a new project using a 
     - [ ] **procedures/AI_HANDOFF_INSTRUCTIONS.md generated** (see step 17)
     - [ ] **procedures/LIVE_RULE_FILTERING_PROCESS.md generated** (see step 18)
     - [ ] **procedures/UNPLANNED_TASK_PROCESS.md generated** (see step 19)
+    - [ ] **procedures/DEBUGGING_WORKFLOW.md generated** (see step 20)
     - [ ] **All enforcement mechanisms automatically created**
     
 17. **AI Generates Handoff Instructions:** The AI automatically creates `procedures/AI_HANDOFF_INSTRUCTIONS.md` file containing complete instructions for any future AI assistant to seamlessly continue the project.
@@ -230,10 +233,28 @@ This guide outlines the structured process for initiating a new project using a 
 
 19. **AI Generates Unplanned Task Process:** The AI automatically creates `procedures/UNPLANNED_TASK_PROCESS.md` file with instructions for handling unplanned work that arises during development.
 
+20. **AI Generates Debugging Workflow Process:** The AI automatically creates `procedures/DEBUGGING_WORKFLOW.md` file with detailed instructions for the DEBUGGING_TASK workflow including mandatory debug branch creation and cross-AI session compatibility.
+
+    **DEBUGGING_WORKFLOW.md Content Requirements (Mandatory):**
+    - **Mandatory Triggers Section**: List specific conditions that require debugging mode (rubocop/rspec failures, recurring test failures, etc.)
+    - **DEBUGGING_TASK Classification**: Define as separate task type with HIGH priority
+    - **5-Phase Step-by-Step Procedure**: 
+      - Phase 1: Preparation & Branch Setup (document problem, verify state, create debug branch)
+      - Phase 2: Safe Experimentation (reproduce, analyze, experiment freely on debug branch)
+      - Phase 3: Solution Validation (verify complete fix, test edge cases, document solution)
+      - Phase 4: Clean Implementation (return to feature branch, apply clean solution, final verification)
+      - Phase 5: Cleanup & Documentation (document for future, clean up debug branch)
+    - **AI-Specific Instructions**: How any AI/LLM should follow this procedure
+    - **Cross-Session Handoff Format**: Template for continuing debugging across different AI sessions
+    - **Critical Rules**: Never commit debug code to feature branches, always verify complete solution
+    - **Integration Guidelines**: How debugging workflow integrates with existing development process
+    - **Success Metrics**: Clear criteria for successful debugging completion
+
     **Enforcement File Requirements:**
     - **procedures/AI_HANDOFF_INSTRUCTIONS.md**: Complete takeover instructions for any AI
     - **procedures/LIVE_RULE_FILTERING_PROCESS.md**: Mandatory 4-step process with continuous enforcement
     - **procedures/UNPLANNED_TASK_PROCESS.md**: Process for handling unplanned work
+    - **procedures/DEBUGGING_WORKFLOW.md**: DEBUGGING_TASK workflow with debug branch creation and cross-AI compatibility
     - **Bootstrap completion checklist** in each file
     - **Violation detection and recovery** protocols
     - **Self-monitoring checkpoints** for AI assistants
@@ -246,6 +267,7 @@ This guide outlines the structured process for initiating a new project using a 
     - Quality requirements and testing standards
     - Project context and technical stack overview
     - Example handoff scenario showing how AI should respond when taking over
+    - **DEBUGGING_WORKFLOW.md specific requirements**: 5-phase debugging procedure, mandatory triggers, debug branch workflow, cross-AI session compatibility
     - **Continuous enforcement throughout entire project lifecycle**
     - **Violation detection and recovery protocols**
     - **Self-correction mechanisms for AI assistants**
@@ -278,6 +300,7 @@ This guide outlines the structured process for initiating a new project using a 
     - ✅ procedures/LIVE_RULE_FILTERING_PROCESS.md - Mandatory rule filtering for every task
     - ✅ procedures/AI_HANDOFF_INSTRUCTIONS.md - Complete AI continuity instructions
     - ✅ procedures/UNPLANNED_TASK_PROCESS.md - Process for handling unplanned work
+    - ✅ procedures/DEBUGGING_WORKFLOW.md - DEBUGGING_TASK workflow for error handling and cross-AI sessions
     
     📂 All files saved to: [directory path]
     
