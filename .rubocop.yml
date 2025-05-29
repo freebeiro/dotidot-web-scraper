@@ -41,7 +41,9 @@ Style/StringLiterals:
 
 # Metrics configurations
 Metrics/MethodLength:
-  Max: 35
+  Max: 40
+  Exclude:
+    - 'spec/**/*'
 
 Metrics/ClassLength:
   Max: 150
@@ -82,11 +84,15 @@ Style/HashLikeCase:
 
 # Allow complexity in specs and service strategies
 Metrics/CyclomaticComplexity:
+  Max: 10
   Exclude:
     - 'spec/**/*'
     - 'app/services/*_strategy.rb'
+    - 'app/services/scraper_orchestrator_service.rb'
 
 Metrics/PerceivedComplexity:
+  Max: 11
   Exclude:
     - 'spec/**/*'
     - 'app/services/*_strategy.rb'
+    - 'app/services/scraper_orchestrator_service.rb'

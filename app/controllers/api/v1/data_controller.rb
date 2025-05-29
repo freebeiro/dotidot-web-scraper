@@ -27,9 +27,12 @@ module Api
       def handle_extraction_request
         validate_parameters!
 
+        parsed_fields = parse_fields
+        Rails.logger.debug { "Parsed fields in controller: #{parsed_fields.inspect}" }
+
         result = ScraperOrchestratorService.call(
           url: extraction_params[:url],
-          fields: parse_fields
+          fields: parsed_fields
         )
 
         if result[:success]
@@ -62,8 +65,8 @@ module Api
         if fields_param.is_a?(String)
           # Parse JSON string (for GET requests)
           JSON.parse(fields_param)
-        elsif fields_param.is_a?(Hash)
-          # Already a hash (for POST requests)
+        elsif fields_param.is_a?(Hash) || fields_param.is_a?(Array)
+          # Already a hash or array (for POST requests)
           fields_param
         else
           raise ScraperErrors::ValidationError, "Invalid fields format"

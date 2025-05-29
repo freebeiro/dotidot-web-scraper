@@ -14,13 +14,15 @@ RSpec.describe ScraperOrchestratorService do
   let(:http_client) { class_double(HttpClientService) }
   let(:html_parser) { class_double(HtmlParserService) }
   let(:css_strategy) { class_double(CssExtractionStrategy) }
+  let(:meta_strategy) { class_double(MetaExtractionStrategy) }
 
   let(:service) do
     described_class.new(
       url_validator: url_validator,
       http_client: http_client,
       html_parser: html_parser,
-      css_strategy: css_strategy
+      css_strategy: css_strategy,
+      meta_strategy: meta_strategy
     )
   end
 
@@ -30,6 +32,7 @@ RSpec.describe ScraperOrchestratorService do
       allow(HttpClientService).to receive(:call).and_return({ success: true, body: html_content })
       allow(HtmlParserService).to receive(:call).and_return({ success: true, doc: parsed_document })
       allow(CssExtractionStrategy).to receive(:call).and_return({ success: true, data: { "title" => "Test Title", "description" => "Test Description" } })
+      allow(MetaExtractionStrategy).to receive(:call).and_return({ success: true, data: {} })
 
       result = described_class.call(url: valid_url, fields: { "title" => { "selector" => "h1", "type" => "text" }, "description" => { "selector" => "p", "type" => "text" } })
 
