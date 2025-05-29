@@ -127,11 +127,14 @@ class ScraperOrchestratorService
       request_id: Thread.current[:request_id]
     }
 
-    if error
-      context[:error_class] = error.class.name
-      context[:error_message] = error.message
-    end
-
+    context.merge!(build_error_context(error)) if error
     context
+  end
+
+  def build_error_context(error)
+    {
+      error_class: error.class.name,
+      error_message: error.message
+    }
   end
 end

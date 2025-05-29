@@ -64,7 +64,8 @@ module ErrorHandling
 
     # Create a new error but preserve the original for debugging
     wrapped_error = ScraperErrors::BaseError.new(message)
-    wrapped_error.set_backtrace(error.backtrace) if error.backtrace
+    backtrace = error.backtrace
+    wrapped_error.set_backtrace(backtrace) if backtrace
 
     render_error_response(
       wrapped_error,
@@ -74,34 +75,35 @@ module ErrorHandling
   end
 
   def render_error_response(error, status, error_code)
-    error_id = SecureRandom.uuid
+    response_body = build_response_body(error, error_code)
+    render json: response_body, status: status
+  end
 
-    response_body = {
+  def build_response_body(error, error_code)
+    {
       error: {
         code: error_code,
         message: error.message,
-        error_id: error_id,
+        error_id: SecureRandom.uuid,
         timestamp: Time.current.iso8601,
         request_id: request.request_id || request.headers["X-Request-Id"]
-      }
+      }.merge(build_optional_error_fields(error, error_code))
     }
+  end
 
-    # Add debugging information in development
-    if Rails.env.development?
-      response_body[:error][:debug] = {
-        class: error.class.name,
-        backtrace: error.backtrace&.first(5)
-      }
-    end
+  def build_optional_error_fields(error, error_code)
+    fields = {}
+    fields[:debug] = build_debug_info(error) if Rails.env.development?
+    fields[:help_url] = error_help_url(error_code) if error_help_url(error_code)
+    fields[:retry_after] = error.retry_after if error.respond_to?(:retry_after)
+    fields
+  end
 
-    # Add help URL for known errors
-    help_url = error_help_url(error_code)
-    response_body[:error][:help_url] = help_url if help_url
-
-    # Add retry information for rate limits
-    response_body[:error][:retry_after] = error.retry_after if error.respond_to?(:retry_after)
-
-    render json: response_body, status: status
+  def build_debug_info(error)
+    {
+      class: error.class.name,
+      backtrace: error.backtrace&.first(5)
+    }
   end
 
   def log_error(error, level: :error)
@@ -112,7 +114,8 @@ module ErrorHandling
 
   def build_error_context(error)
     context = build_request_context.merge(build_error_details(error))
-    context[:backtrace] = error.backtrace&.first(10) if error.backtrace
+    backtrace = error.backtrace
+    context[:backtrace] = backtrace&.first(10) if backtrace
     context
   end
 

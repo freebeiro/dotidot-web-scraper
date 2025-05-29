@@ -48,6 +48,8 @@ Metrics/ClassLength:
 
 Metrics/ModuleLength:
   Max: 130
+  Exclude:
+    - 'app/controllers/concerns/*'
 
 Metrics/BlockLength:
   Exclude:
