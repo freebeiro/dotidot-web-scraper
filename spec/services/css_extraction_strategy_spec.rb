@@ -57,14 +57,17 @@ RSpec.describe CssExtractionStrategy do
       end
 
       it "extracts attributes" do
-        field = ExtractedField.new(
-          name: "product_id",
-          selector: ".product:first",
-          type: "attribute",
-          attribute: "data-id"
-        )
+        fields = [
+          {
+            name: "product_id",
+            selector: ".product",
+            type: "attribute",
+            attribute: "data-id",
+            multiple: false
+          }
+        ]
 
-        result = described_class.call(doc, fields: [field])
+        result = described_class.call(doc, fields)
 
         expect(result[:success]).to be true
         expect(result[:data]["product_id"]).to eq("123")
