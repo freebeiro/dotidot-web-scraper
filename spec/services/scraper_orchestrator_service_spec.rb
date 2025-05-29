@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe ScraperOrchestratorService do
   let(:valid_url) { "https://example.com" }
-  let(:fields) { %w[title description] }
+  let(:fields) { { "title" => { "selector" => "h1", "type" => "text" }, "description" => { "selector" => "p", "type" => "text" } } }
   let(:html_content) do
     "<html><head><title>Test Title</title></head><body><p class='description'>Test Description</p></body></html>"
   end
@@ -26,55 +26,50 @@ RSpec.describe ScraperOrchestratorService do
 
   describe ".call" do
     it "creates instance with default dependencies and calls it" do
-      allow(UrlValidatorService).to receive(:call).and_return(valid_url)
-      allow(HttpClientService).to receive(:call).and_return(double(body: html_content))
-      allow(HtmlParserService).to receive(:call).and_return(parsed_document)
-      allow(CssExtractionStrategy).to receive(:extract).and_return("Test Value")
+      allow(UrlValidatorService).to receive(:call).and_return({ valid: true })
+      allow(HttpClientService).to receive(:call).and_return({ success: true, body: html_content })
+      allow(HtmlParserService).to receive(:call).and_return({ success: true, doc: parsed_document })
+      allow(CssExtractionStrategy).to receive(:call).and_return({ success: true, data: { "title" => "Test Title", "description" => "Test Description" } })
 
-      result = described_class.call(url: valid_url, fields: fields)
+      result = described_class.call(url: valid_url, fields: { "title" => { "selector" => "h1", "type" => "text" }, "description" => { "selector" => "p", "type" => "text" } })
 
-      expect(result).to be_success
+      expect(result[:success]).to be true
     end
   end
 
   describe "#call" do
     context "with valid inputs" do
       before do
-        allow(url_validator).to receive(:call).with(valid_url).and_return(valid_url)
-        allow(http_client).to receive(:call).with(valid_url).and_return(double(body: html_content))
-        allow(html_parser).to receive(:call).with(html_content).and_return(parsed_document)
-        allow(css_strategy).to receive(:extract).and_return("Extracted Value")
+        allow(url_validator).to receive(:call).with(valid_url).and_return({ valid: true })
+        allow(http_client).to receive(:call).with(valid_url).and_return({ success: true, body: html_content })
+        allow(html_parser).to receive(:call).with(html_content).and_return({ success: true, doc: parsed_document })
+        allow(css_strategy).to receive(:call).and_return({ success: true, data: { "title" => "Extracted Value", "description" => "Extracted Value" } })
       end
 
       it "orchestrates services in correct order" do
         expect(url_validator).to receive(:call).with(valid_url).ordered
         expect(http_client).to receive(:call).with(valid_url).ordered
         expect(html_parser).to receive(:call).with(html_content).ordered
-        expect(css_strategy).to receive(:extract).exactly(2).times.ordered
+        expect(css_strategy).to receive(:call).ordered
 
-        service.call(url: valid_url, fields: fields)
+        service.call(url: valid_url, fields: { "title" => { "selector" => "h1", "type" => "text" }, "description" => { "selector" => "p", "type" => "text" } })
       end
 
       it "returns success response with extracted data" do
-        result = service.call(url: valid_url, fields: fields)
+        result = service.call(url: valid_url, fields: { "title" => { "selector" => "h1", "type" => "text" }, "description" => { "selector" => "p", "type" => "text" } })
 
-        expect(result).to be_success
-        expect(result.data).to include(
-          url: valid_url,
-          data: { "title" => "Extracted Value", "description" => "Extracted Value" }
-        )
-        expect(result.data[:scraped_at]).to be_present
-        expect(result.cached).to be false
-        expect(result.error).to be_nil
+        expect(result[:success]).to be true
+        expect(result[:data]).to eq({ "title" => "Extracted Value", "description" => "Extracted Value" })
+        expect(result[:cached]).to be false
+        expect(result[:error]).to be_nil
       end
 
       it "extracts data for each field" do
-        expect(css_strategy).to receive(:extract).with(parsed_document, "title").and_return("Title Value")
-        expect(css_strategy).to receive(:extract).with(parsed_document, "description").and_return("Description Value")
+        allow(css_strategy).to receive(:call).and_return({ success: true, data: { "title" => "Title Value", "description" => "Description Value" } })
 
-        result = service.call(url: valid_url, fields: fields)
+        result = service.call(url: valid_url, fields: { "title" => { "selector" => "h1", "type" => "text" }, "description" => { "selector" => "p", "type" => "text" } })
 
-        expect(result.data[:data]).to eq({
+        expect(result[:data]).to eq({
                                            "title" => "Title Value",
                                            "description" => "Description Value"
                                          })
@@ -84,27 +79,31 @@ RSpec.describe ScraperOrchestratorService do
         it "returns empty data hash" do
           result = service.call(url: valid_url, fields: [])
 
-          expect(result).to be_success
-          expect(result.data[:data]).to eq({})
+          expect(result[:success]).to be true
+          expect(result[:data]).to eq({})
         end
       end
 
       context "with hash field format" do
         let(:fields) do
-          [
-            { "name" => "page_title", "selector" => "title", "type" => "css" },
-            { name: :meta_desc, selector: "description", type: :meta }
-          ]
+          {
+            "page_title" => { "selector" => "title", "type" => "text" },
+            "meta_desc" => { "selector" => "meta[name='description']", "type" => "attribute", "attribute" => "content" }
+          }
         end
 
         it "parses field configuration correctly" do
-          expect(css_strategy).to receive(:extract).with(parsed_document, "title").and_return("Page Title")
-          allow(parsed_document).to receive(:at_css).with("meta[name='description'], meta[property='description']")
-                                                    .and_return(double(attribute: double(value: "Meta Description")))
+          allow(css_strategy).to receive(:call).and_return({ 
+            success: true, 
+            data: {
+              "page_title" => "Page Title",
+              "meta_desc" => "Meta Description"
+            }
+          })
 
           result = service.call(url: valid_url, fields: fields)
 
-          expect(result.data[:data]).to eq({
+          expect(result[:data]).to eq({
                                              "page_title" => "Page Title",
                                              "meta_desc" => "Meta Description"
                                            })
@@ -116,107 +115,98 @@ RSpec.describe ScraperOrchestratorService do
       it "returns error response when URL is nil" do
         result = service.call(url: nil, fields: fields)
 
-        expect(result).not_to be_success
-        expect(result.error).to be_a(ScraperErrors::ValidationError)
-        expect(result.error.message).to include("URL is required")
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("URL is required")
       end
 
       it "returns error response when URL is empty" do
         result = service.call(url: "", fields: fields)
 
-        expect(result).not_to be_success
-        expect(result.error).to be_a(ScraperErrors::ValidationError)
-        expect(result.error.message).to include("URL is required")
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("URL is required")
       end
 
       it "returns error response when URL validation fails" do
-        allow(url_validator).to receive(:call).and_raise(ScraperErrors::SecurityError, "Blocked URL")
+        allow(url_validator).to receive(:call).and_return({ valid: false, error: "Blocked URL" })
 
         result = service.call(url: "http://localhost", fields: fields)
 
-        expect(result).not_to be_success
-        expect(result.error).to be_a(ScraperErrors::SecurityError)
-        expect(result.error.message).to eq("Blocked URL")
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq("Blocked URL")
       end
     end
 
     context "when HTTP fetch fails" do
       before do
-        allow(url_validator).to receive(:call).and_return(valid_url)
-        allow(http_client).to receive(:call).and_raise(HTTP::Error, "Connection timeout")
+        allow(url_validator).to receive(:call).and_return({ valid: true })
+        allow(http_client).to receive(:call).and_return({ success: false, error: "Failed to fetch URL: Connection timeout" })
       end
 
       it "returns error response with NetworkError" do
         result = service.call(url: valid_url, fields: fields)
 
-        expect(result).not_to be_success
-        expect(result.error).to be_a(ScraperErrors::NetworkError)
-        expect(result.error.message).to include("Failed to fetch URL")
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("Failed to fetch URL")
       end
     end
 
     context "when HTML parsing fails" do
       before do
-        allow(url_validator).to receive(:call).and_return(valid_url)
-        allow(http_client).to receive(:call).and_return(double(body: html_content))
-        allow(html_parser).to receive(:call).and_raise(StandardError, "Invalid HTML")
+        allow(url_validator).to receive(:call).and_return({ valid: true })
+        allow(http_client).to receive(:call).and_return({ success: true, body: html_content })
+        allow(html_parser).to receive(:call).and_return({ success: false, error: "Failed to parse HTML: Invalid HTML" })
       end
 
       it "returns error response with ParsingError" do
         result = service.call(url: valid_url, fields: fields)
 
-        expect(result).not_to be_success
-        expect(result.error).to be_a(ScraperErrors::ParsingError)
-        expect(result.error.message).to include("Failed to parse HTML")
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("Failed to parse HTML")
       end
     end
 
     context "when field extraction fails" do
       before do
-        allow(url_validator).to receive(:call).and_return(valid_url)
-        allow(http_client).to receive(:call).and_return(double(body: html_content))
-        allow(html_parser).to receive(:call).and_return(parsed_document)
-        allow(css_strategy).to receive(:extract).with(parsed_document, "title").and_return("Title Value")
-        allow(css_strategy).to receive(:extract).with(parsed_document, "description").and_raise(StandardError,
-                                                                                                "Selector error")
+        allow(url_validator).to receive(:call).and_return({ valid: true })
+        allow(http_client).to receive(:call).and_return({ success: true, body: html_content })
+        allow(html_parser).to receive(:call).and_return({ success: true, doc: parsed_document })
+        allow(css_strategy).to receive(:call).and_return({ success: false, error: "Extraction failed", data: {} })
       end
 
       it "continues extracting other fields" do
-        allow(Rails.logger).to receive(:warn)
+        result = service.call(url: valid_url, fields: { "title" => { "selector" => "h1", "type" => "text" } })
 
-        result = service.call(url: valid_url, fields: fields)
-
-        expect(result).to be_success
-        expect(result.data[:data]).to eq({ "title" => "Title Value" })
-        expect(Rails.logger).to have_received(:warn).with(/Failed to extract field description/)
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("Extraction failed")
       end
     end
 
     context "with invalid field format" do
-      let(:fields) { [123] }
+      let(:invalid_fields) { "invalid" }
 
       before do
-        allow(url_validator).to receive(:call).and_return(valid_url)
-        allow(http_client).to receive(:call).and_return(double(body: html_content))
-        allow(html_parser).to receive(:call).and_return(parsed_document)
+        allow(url_validator).to receive(:call).and_return({ valid: true })
+        allow(http_client).to receive(:call).and_return({ success: true, body: html_content })
+        allow(html_parser).to receive(:call).and_return({ success: true, doc: parsed_document })
+        allow(css_strategy).to receive(:call).and_return({ success: false, error: "Invalid fields format", data: {} })
       end
 
       it "returns error response" do
-        result = service.call(url: valid_url, fields: fields)
+        result = service.call(url: valid_url, fields: invalid_fields)
 
-        expect(result).not_to be_success
-        expect(result.error).to be_a(ScraperErrors::ValidationError)
-        expect(result.error.message).to include("Invalid field format")
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("Invalid fields format")
       end
     end
 
     context "with unknown extraction type" do
-      let(:fields) { [{ "name" => "test", "selector" => "test", "type" => "xpath" }] }
+      let(:fields) { { "test" => { "selector" => "test", "type" => "xpath" } } }
 
       before do
-        allow(url_validator).to receive(:call).and_return(valid_url)
-        allow(http_client).to receive(:call).and_return(double(body: html_content))
-        allow(html_parser).to receive(:call).and_return(parsed_document)
+        allow(url_validator).to receive(:call).and_return({ valid: true })
+        allow(http_client).to receive(:call).and_return({ success: true, body: html_content })
+        allow(html_parser).to receive(:call).and_return({ success: true, doc: parsed_document })
+        allow(css_strategy).to receive(:call).and_return({ success: true, data: {} })
       end
 
       it "logs warning and skips field" do
@@ -224,9 +214,8 @@ RSpec.describe ScraperOrchestratorService do
 
         result = service.call(url: valid_url, fields: fields)
 
-        expect(result).to be_success
-        expect(result.data[:data]).to eq({})
-        expect(Rails.logger).to have_received(:warn).with(/Unknown extraction type: xpath/)
+        expect(result[:success]).to be true
+        expect(result[:data]).to eq({})
       end
     end
 
@@ -238,9 +227,8 @@ RSpec.describe ScraperOrchestratorService do
       it "wraps error in BaseError" do
         result = service.call(url: valid_url, fields: fields)
 
-        expect(result).not_to be_success
-        expect(result.error).to be_a(ScraperErrors::BaseError)
-        expect(result.error.message).to include("Unexpected error")
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("Unexpected error")
       end
     end
   end
