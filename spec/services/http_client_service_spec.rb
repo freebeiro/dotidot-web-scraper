@@ -119,11 +119,9 @@ RSpec.describe HttpClientService do
         stub_request(:get, url)
           .to_return do |_request|
             call_count += 1
-            if call_count < 3
-              raise HTTP::ConnectionError, "Connection failed"
-            else
-              { status: 200, body: html_content }
-            end
+            raise HTTP::ConnectionError, "Connection failed" if call_count < 3
+
+            { status: 200, body: html_content }
           end
 
         result = described_class.call(url)
@@ -135,15 +133,13 @@ RSpec.describe HttpClientService do
       it "retries with exponential backoff" do
         start_time = Time.current
         attempts = []
-        
+
         stub_request(:get, url)
           .to_return do |_request|
-            attempts << Time.current - start_time
-            if attempts.size < 3
-              raise HTTP::TimeoutError
-            else
-              { status: 200, body: html_content }
-            end
+            attempts << (Time.current - start_time)
+            raise HTTP::TimeoutError if attempts.size < 3
+
+            { status: 200, body: html_content }
           end
 
         result = described_class.call(url, max_retries: 3)
@@ -174,11 +170,9 @@ RSpec.describe HttpClientService do
         stub_request(:get, url)
           .to_return do |_request|
             call_count += 1
-            if call_count < 2
-              raise SocketError, "getaddrinfo: Name or service not known"
-            else
-              { status: 200, body: html_content }
-            end
+            raise SocketError, "getaddrinfo: Name or service not known" if call_count < 2
+
+            { status: 200, body: html_content }
           end
 
         result = described_class.call(url)

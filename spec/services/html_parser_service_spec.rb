@@ -283,14 +283,15 @@ RSpec.describe HtmlParserService do
         expect(result[:success]).to be true
       end
 
-      xit "handles invalid encoding (edge case)" do
-        # This is an edge case that depends on Ruby version and encoding handling
+      it "handles invalid encoding (edge case)" do
+        # Invalid encoding that results in empty content after cleaning should fail
         invalid_utf8 = "\xFF\xFE"
 
         result = described_class.call(invalid_utf8)
 
-        # Should still try to parse
-        expect(result[:success]).to be true
+        # Should fail because cleaned content is empty
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("HTML content cannot be empty")
       end
     end
 

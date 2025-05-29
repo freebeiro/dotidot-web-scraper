@@ -137,7 +137,7 @@ RSpec.describe CssExtractionStrategy do
           <div class="spaced">Multiple   spaces    here</div>
           <div class="newlines">Line 1
           Line 2
-          
+
           Line 3</div>
           <pre class="preformatted">  Preserved    spacing  </pre>
           <div class="nbsp">Non&nbsp;breaking&nbsp;spaces</div>
@@ -193,7 +193,6 @@ RSpec.describe CssExtractionStrategy do
         expect(result[:success]).to be true
         expect(result[:data]["missing"]).to be_nil
       end
-
 
       it "handles missing attributes" do
         field = {
@@ -291,7 +290,7 @@ RSpec.describe CssExtractionStrategy do
       end
 
       it "handles very long text content" do
-        long_text = "a" * 10000
+        long_text = "a" * 10_000
         long_html = "<div class='long'>#{long_text}</div>"
         long_doc = Nokogiri::HTML(long_html)
         field = { name: "long", selector: ".long", type: "text" }

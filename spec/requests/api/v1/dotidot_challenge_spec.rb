@@ -42,7 +42,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        
+
         expect(data["price"]).to eq("$99.99")
       end
 
@@ -61,7 +61,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        
+
         expect(data["price"]).to eq("$99.99")
         expect(data["title"]).to eq("Product Title")
         expect(data["name"]).to eq("Product Name")
@@ -80,7 +80,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        
+
         expect(data["product_id"]).to eq("123")
       end
 
@@ -97,7 +97,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        
+
         expect(data["features"]).to eq(["Feature 1", "Feature 2"])
       end
     end
@@ -117,7 +117,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        
+
         expect(data["price"]).to eq("$99.99")
         expect(data["title"]).to eq("Product Title")
       end
@@ -140,7 +140,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
       expect(response).to have_http_status(:ok)
       data = response.parsed_body
-      
+
       expect(data["description"]).to eq("Test description")
       expect(data["keywords"]).to eq("test, keywords")
     end
@@ -158,7 +158,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
       expect(response).to have_http_status(:ok)
       data = response.parsed_body
-      
+
       expect(data["og_title"]).to eq("OpenGraph Title")
     end
   end
@@ -327,7 +327,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        
+
         expect(data["title"]).to eq("Test")
       end
 
@@ -357,7 +357,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        
+
         expect(data["missing"]).to be_nil
       end
     end

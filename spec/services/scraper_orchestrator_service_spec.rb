@@ -70,9 +70,9 @@ RSpec.describe ScraperOrchestratorService do
         result = service.call(url: valid_url, fields: { "title" => { "selector" => "h1", "type" => "text" }, "description" => { "selector" => "p", "type" => "text" } })
 
         expect(result[:data]).to eq({
-                                           "title" => "Title Value",
-                                           "description" => "Description Value"
-                                         })
+                                      "title" => "Title Value",
+                                      "description" => "Description Value"
+                                    })
       end
 
       context "with empty fields" do
@@ -93,20 +93,20 @@ RSpec.describe ScraperOrchestratorService do
         end
 
         it "parses field configuration correctly" do
-          allow(css_strategy).to receive(:call).and_return({ 
-            success: true, 
-            data: {
-              "page_title" => "Page Title",
-              "meta_desc" => "Meta Description"
-            }
-          })
+          allow(css_strategy).to receive(:call).and_return({
+                                                             success: true,
+                                                             data: {
+                                                               "page_title" => "Page Title",
+                                                               "meta_desc" => "Meta Description"
+                                                             }
+                                                           })
 
           result = service.call(url: valid_url, fields: fields)
 
           expect(result[:data]).to eq({
-                                             "page_title" => "Page Title",
-                                             "meta_desc" => "Meta Description"
-                                           })
+                                        "page_title" => "Page Title",
+                                        "meta_desc" => "Meta Description"
+                                      })
         end
       end
     end
