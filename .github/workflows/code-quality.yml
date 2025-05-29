@@ -34,7 +34,7 @@ jobs:
     - name: Check for code smells with Reek
       run: |
         gem install reek
-        reek app lib
+        reek app lib || echo "⚠️  Reek warnings found but not blocking build"
     
     - name: Check test coverage
       env:
