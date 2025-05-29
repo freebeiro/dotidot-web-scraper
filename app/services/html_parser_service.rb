@@ -77,18 +77,23 @@ class HtmlParserService
     document
   rescue Encoding::UndefinedConversionError, Encoding::InvalidByteSequenceError => e
     Rails.logger.error("Encoding error during HTML parsing: #{e.message}")
-
-    # Try to parse with forced UTF-8 encoding
-    begin
-      cleaned_content = @html_content.force_encoding("UTF-8")
-                                     .encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
-      Nokogiri::HTML(cleaned_content, nil, "UTF-8", PARSER_OPTIONS)
-    rescue => e
-      Rails.logger.error("Failed to parse HTML even with encoding recovery: #{e.message}")
-      raise ScraperErrors::ValidationError, "HTML parsing failed: #{e.message}"
-    end
+    attempt_encoding_recovery
   rescue => e
     Rails.logger.error("Unexpected error during HTML parsing: #{e.message}")
-    raise ScraperErrors::ValidationError, "HTML parsing failed: #{e.message}"
+    raise_parsing_error(e)
+  end
+
+  def attempt_encoding_recovery
+    # Try to parse with forced UTF-8 encoding
+    cleaned_content = @html_content.force_encoding("UTF-8")
+                                   .encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
+    Nokogiri::HTML(cleaned_content, nil, "UTF-8", PARSER_OPTIONS)
+  rescue => e
+    Rails.logger.error("Failed to parse HTML even with encoding recovery: #{e.message}")
+    raise_parsing_error(e)
+  end
+
+  def raise_parsing_error(error)
+    raise ScraperErrors::ValidationError, "HTML parsing failed: #{error.message}"
   end
 end

@@ -24,37 +24,40 @@ class ScraperOrchestratorService
     @current_url = url
     start_time = Time.current
 
-    Rails.logger.info("ScraperOrchestrator started: #{{
-      url: url,
-      fields_count: fields.size,
-      request_id: Thread.current[:request_id]
-    }.to_json}")
-
+    log_start_context(url, fields)
     validate_inputs!(url)
 
-    # Check cache first (placeholder for now)
     cached_result = check_cache(url, fields)
-    if cached_result
-      log_completion(start_time, true, true)
-      return success_response(cached_result, cached: true)
-    end
+    return success_response(cached_result, cached: true) if cached_result
 
-    # Fetch and process
+    process_scraping_workflow(url, fields, start_time)
+  rescue ScraperErrors::BaseError, StandardError => e
+    handle_error(e, start_time)
+  end
+
+  def process_scraping_workflow(url, fields, start_time)
     html_content = fetch_html(url)
     parsed_document = parse_html(html_content)
     extracted_data = extract_data(parsed_document, fields)
 
-    # Cache results (placeholder for now)
     cache_results(url, fields, extracted_data)
-
     log_completion(start_time, true, false)
     success_response(extracted_data, cached: false)
-  rescue ScraperErrors::BaseError => e
-    log_completion(start_time, false, false, error: e)
-    error_response(e)
-  rescue => e
-    log_completion(start_time, false, false, error: e)
-    error_response(wrap_unexpected_error(e))
+  end
+
+  def handle_error(error, start_time)
+    log_completion(start_time, false, false, error: error)
+    wrapped_error = error.is_a?(ScraperErrors::BaseError) ? error : wrap_unexpected_error(error)
+    error_response(wrapped_error)
+  end
+
+  def log_start_context(url, fields)
+    context = {
+      url: url,
+      fields_count: fields.size,
+      request_id: Thread.current[:request_id]
+    }
+    Rails.logger.info("ScraperOrchestrator started: #{context.to_json}")
   end
 
   private

@@ -104,9 +104,19 @@ module ErrorHandling
   end
 
   def log_error(error, level: :error)
-    context = {
-      error_class: error.class.name,
-      error_message: error.message,
+    context = build_error_context(error)
+    Rails.logger.public_send(level, "Error occurred: #{error.message}. Context: #{context.to_json}")
+    notify_error_tracker(error, context) if should_notify_error?(error)
+  end
+
+  def build_error_context(error)
+    context = build_request_context.merge(build_error_details(error))
+    context[:backtrace] = error.backtrace&.first(10) if error.backtrace
+    context
+  end
+
+  def build_request_context
+    {
       request_id: request.request_id,
       request_path: request.path,
       request_method: request.method,
@@ -114,13 +124,13 @@ module ErrorHandling
       user_agent: request.user_agent,
       params: filtered_params
     }
+  end
 
-    context[:backtrace] = error.backtrace&.first(10) if error.backtrace
-
-    Rails.logger.public_send(level, "Error occurred: #{error.message}. Context: #{context.to_json}")
-
-    # Hook for external error tracking services
-    notify_error_tracker(error, context) if should_notify_error?(error)
+  def build_error_details(error)
+    {
+      error_class: error.class.name,
+      error_message: error.message
+    }
   end
 
   def filtered_params
