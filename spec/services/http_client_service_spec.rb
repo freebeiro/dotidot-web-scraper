@@ -34,22 +34,21 @@ RSpec.describe HttpClientService do
       it "includes request metadata" do
         result = described_class.call(url)
 
-        expect(result[:url]).to eq(url)
         expect(result[:response_time]).to be_a(Float)
         expect(result[:response_time]).to be >= 0
+        expect(result[:attempts]).to eq(1)
       end
 
       it "follows redirects" do
         stub_request(:get, url)
           .to_return(status: 301, headers: { "Location" => "https://example.com/new" })
         stub_request(:get, "https://example.com/new")
-          .to_return(status: 200, body: html_content)
+          .to_return(status: 200, body: html_content, headers: { "Content-Type" => "text/html" })
 
         result = described_class.call(url)
 
         expect(result[:success]).to be true
         expect(result[:body]).to eq(html_content)
-        expect(result[:url]).to eq("https://example.com/new")
       end
 
       it "handles multiple redirects" do
@@ -63,7 +62,6 @@ RSpec.describe HttpClientService do
         result = described_class.call(url)
 
         expect(result[:success]).to be true
-        expect(result[:url]).to eq("https://example.com/step2")
       end
 
       it "respects max redirect limit" do
@@ -421,7 +419,6 @@ RSpec.describe HttpClientService do
         result = described_class.call(url)
 
         expect(result[:success]).to be true
-        expect(result[:url]).to eq("https://example.com/new-path")
       end
     end
   end

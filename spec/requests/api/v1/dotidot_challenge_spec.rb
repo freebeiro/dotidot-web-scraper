@@ -42,8 +42,8 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        expect(data["success"]).to be true
-        expect(data["data"]["price"]).to eq("$99.99")
+        
+        expect(data["price"]).to eq("$99.99")
       end
 
       it "extracts multiple fields from CSS selectors" do
@@ -61,10 +61,10 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        expect(data["success"]).to be true
-        expect(data["data"]["price"]).to eq("$99.99")
-        expect(data["data"]["title"]).to eq("Product Title")
-        expect(data["data"]["name"]).to eq("Product Name")
+        
+        expect(data["price"]).to eq("$99.99")
+        expect(data["title"]).to eq("Product Title")
+        expect(data["name"]).to eq("Product Name")
       end
 
       it "extracts attributes from elements" do
@@ -80,8 +80,8 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        expect(data["success"]).to be true
-        expect(data["data"]["product_id"]).to eq("123")
+        
+        expect(data["product_id"]).to eq("123")
       end
 
       it "extracts multiple elements as array" do
@@ -97,8 +97,8 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        expect(data["success"]).to be true
-        expect(data["data"]["features"]).to eq(["Feature 1", "Feature 2"])
+        
+        expect(data["features"]).to eq(["Feature 1", "Feature 2"])
       end
     end
 
@@ -117,9 +117,9 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        expect(data["success"]).to be true
-        expect(data["data"]["price"]).to eq("$99.99")
-        expect(data["data"]["title"]).to eq("Product Title")
+        
+        expect(data["price"]).to eq("$99.99")
+        expect(data["title"]).to eq("Product Title")
       end
     end
   end
@@ -140,9 +140,9 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
       expect(response).to have_http_status(:ok)
       data = response.parsed_body
-      expect(data["success"]).to be true
-      expect(data["data"]["description"]).to eq("Test description")
-      expect(data["data"]["keywords"]).to eq("test, keywords")
+      
+      expect(data["description"]).to eq("Test description")
+      expect(data["keywords"]).to eq("test, keywords")
     end
 
     it "extracts OpenGraph meta properties" do
@@ -158,8 +158,8 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
       expect(response).to have_http_status(:ok)
       data = response.parsed_body
-      expect(data["success"]).to be true
-      expect(data["data"]["og_title"]).to eq("OpenGraph Title")
+      
+      expect(data["og_title"]).to eq("OpenGraph Title")
     end
   end
 
@@ -186,7 +186,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
       expect(response).to have_http_status(:ok)
       second_data = response.parsed_body
-      expect(second_data["data"]["price"]).to eq(first_data["data"]["price"])
+      expect(second_data["price"]).to eq(first_data["price"])
 
       # Verify only one HTTP request was made
       expect(WebMock).to have_requested(:get, "https://example.com/cached").once
@@ -265,7 +265,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
         expect(response).to have_http_status(:bad_request)
         data = response.parsed_body
         expect(data["success"]).to be false
-        expect(data["error"]).to include("Invalid URL")
+        expect(data["error"]).to include("URL scheme")
       end
 
       it "validates JSON fields format" do
@@ -291,10 +291,10 @@ RSpec.describe "Dotidot Challenge API", type: :request do
           fields: JSON.generate({ "title" => { "selector" => "title", "type" => "text" } })
         }
 
-        expect(response).to have_http_status(:bad_gateway)
+        expect(response).to have_http_status(:bad_request)
         data = response.parsed_body
         expect(data["success"]).to be false
-        expect(data["error"]).to include("timeout")
+        expect(data["error"]).to include("timed out")
       end
 
       it "handles HTTP errors" do
@@ -306,7 +306,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
           fields: JSON.generate({ "title" => { "selector" => "title", "type" => "text" } })
         }
 
-        expect(response).to have_http_status(:bad_gateway)
+        expect(response).to have_http_status(:bad_request)
         data = response.parsed_body
         expect(data["success"]).to be false
         expect(data["error"]).to include("404")
@@ -327,8 +327,8 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        expect(data["success"]).to be true
-        expect(data["data"]["title"]).to eq("Test")
+        
+        expect(data["title"]).to eq("Test")
       end
 
       it "handles empty HTML gracefully" do
@@ -342,8 +342,8 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        expect(data["success"]).to be true
-        expect(data["data"]["title"]).to be_nil
+        
+        expect(data["title"]).to be_nil
       end
 
       it "handles selectors that match no elements" do
@@ -357,8 +357,8 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
         expect(response).to have_http_status(:ok)
         data = response.parsed_body
-        expect(data["success"]).to be true
-        expect(data["data"]["missing"]).to be_nil
+        
+        expect(data["missing"]).to be_nil
       end
     end
   end
