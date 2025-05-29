@@ -115,8 +115,8 @@ This guide outlines the structured process for initiating a new project using a 
     - `procedures/LIVE_RULE_FILTERING_PROCESS.md` - Live rule filtering with continuous enforcement throughout project
     - `procedures/AI_HANDOFF_INSTRUCTIONS.md` - Complete instructions for AI continuity
     - `procedures/UNPLANNED_TASK_PROCESS.md` - How to handle unplanned work WITH SAME WORKFLOW as planned tasks
-    - `procedures/DEBUGGING_WORKFLOW.md` - DEBUGGING_TASK workflow for error handling and test failures
-    - `procedures/unplanned_tasks/TEMPLATE_UNPLANNED_TASK.md` - Template ensuring consistent workflow
+    - `procedures/DEBUGGING_WORKFLOW.md` - DEBUGGING_TASK workflow that ALSO FOLLOWS SAME 4-STEP PROCESS
+    - `procedures/unplanned_tasks/TEMPLATE_UNPLANNED_TASK.md` - Template ensuring consistent workflow for ALL task types
     
     **Testing Guidelines:** When generating testing guidelines (if testing was requested), the AI must ensure the draft covers standard levels (Unit, Integration, System/E2E) and include recommendations for testing infrastructure appropriate to the project type and classification.
     
@@ -183,6 +183,12 @@ This guide outlines the structured process for initiating a new project using a 
     - **Implementation follows ONLY filtered rules** to maintain laser focus
     - **Include rule filtering time** in step estimates (typically 2-3 minutes per step)
     - **4-Step Process**: Filter → Implement → Test → Commit (mandatory for every step)
+    
+    **CRITICAL: Workflow Consistency Requirement:**
+    - **ALL work types follow the SAME 4-step process**: Planned tasks, unplanned tasks, AND debug tasks
+    - **No exceptions**: Even emergency fixes must follow Live Rule Filtering → Implementation → Testing → Documentation
+    - **Debug mode is NOT different**: DEBUGGING_TASK uses identical workflow on a debug branch
+    - **Template enforcement**: All unplanned/debug work must use the provided template
     
     **Rule Filtering Requirements:**
     - Scan ALL rule files before each implementation step
