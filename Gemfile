@@ -28,7 +28,7 @@ gem "http", "~> 5.1" # HTTP client library
 gem "nokogiri", "~> 1.15" # HTML/XML parsing
 
 # Background job processing
-gem "sidekiq", "~> 7.1" # Background jobs with Redis
+gem "sidekiq", "~> 8.0" # Background jobs with Redis
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
