@@ -122,8 +122,6 @@ RSpec.describe "Api::V1::Data", type: :request do
         expect(json["success"]).to be false
         expect(json["error"]).to eq("Unexpected error")
       end
-
     end
-
   end
 end

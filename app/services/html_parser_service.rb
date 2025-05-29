@@ -43,7 +43,24 @@ class HtmlParserService
 
   def validate_content
     raise ScraperErrors::ValidationError, "HTML content cannot be nil" if @html_content.nil?
-    raise ScraperErrors::ValidationError, "HTML content cannot be empty" if @html_content.strip.empty?
+
+    # Handle potential encoding issues before any string operations
+    begin
+      @html_content.valid_encoding?
+      content_empty = @html_content.strip.empty?
+    rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError, ArgumentError
+      # Handle invalid encoding - try to clean it up
+      begin
+        cleaned_content = @html_content.dup.force_encoding("UTF-8")
+                                       .encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
+        content_empty = cleaned_content.strip.empty?
+        @html_content = cleaned_content # Use cleaned version
+      rescue => e
+        raise ScraperErrors::ValidationError, "HTML content has invalid encoding: #{e.message}"
+      end
+    end
+
+    raise ScraperErrors::ValidationError, "HTML content cannot be empty" if content_empty
 
     return unless @html_content.bytesize > MAX_CONTENT_SIZE
 

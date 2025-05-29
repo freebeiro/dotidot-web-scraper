@@ -87,7 +87,7 @@ RSpec.describe UrlValidatorService do
       end
 
       it "rejects URLs that are too long" do
-        long_url = "https://example.com/" + "a" * 2100
+        long_url = "https://example.com/#{'a' * 2100}"
         result = described_class.call(long_url)
         expect(result[:valid]).to be false
         expect(result[:error]).to include("URL too long")
