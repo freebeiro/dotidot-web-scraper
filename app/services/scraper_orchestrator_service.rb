@@ -3,6 +3,8 @@
 require "ostruct"
 require "digest"
 
+# Orchestrates the complete web scraping workflow by coordinating URL validation,
+# HTTP fetching, HTML parsing, and data extraction services
 class ScraperOrchestratorService
   def self.call(url:, fields: [])
     new(
@@ -159,7 +161,12 @@ class ScraperOrchestratorService
 
   def log_completion(start_time, success, cached, error: nil)
     duration = ((Time.current - start_time) * 1000).round(2)
+    context = build_completion_context(duration, success, cached, error)
+    level = success ? :info : :error
+    Rails.logger.public_send(level, "ScraperOrchestrator completed: #{context.to_json}")
+  end
 
+  def build_completion_context(duration, success, cached, error)
     context = {
       duration_ms: duration,
       success: success,
@@ -173,7 +180,6 @@ class ScraperOrchestratorService
       context[:error_message] = error.message
     end
 
-    level = success ? :info : :error
-    Rails.logger.public_send(level, "ScraperOrchestrator completed: #{context.to_json}")
+    context
   end
 end

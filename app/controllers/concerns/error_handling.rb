@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Provides comprehensive error handling for API controllers with standardized error responses
 module ErrorHandling
   extend ActiveSupport::Concern
 

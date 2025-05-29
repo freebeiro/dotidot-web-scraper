@@ -2,6 +2,7 @@
 
 module Api
   module V1
+    # Handles web scraping API requests for CSS selector and meta tag extraction
     class DataController < ApplicationController
       include RequestLogging
 
