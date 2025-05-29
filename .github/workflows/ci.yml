@@ -86,5 +86,5 @@ jobs:
     
     - name: Run Docker container test
       run: |
-        docker run --rm dotidot-scraper:test rails --version
+        docker run --rm dotidot-scraper:test ./bin/rails --version
         docker run --rm dotidot-scraper:test ruby --version
