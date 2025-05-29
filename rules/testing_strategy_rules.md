@@ -503,4 +503,69 @@ end
 - [ ] Tests document expected behavior
 - [ ] Tests catch real bugs
 
+## 🚨 Test Quality Enforcement (CRITICAL)
+
+### Mandatory Testing Workflow
+```bash
+# BEFORE any code changes
+bundle exec rspec                    # Baseline - should be 100% passing
+
+# DURING development (run frequently)
+bundle exec rspec spec/specific/     # Test specific areas you're changing
+
+# BEFORE committing (non-negotiable)
+bundle exec rspec                    # MUST be 100% passing, 0 failures
+bundle exec rubocop                  # MUST be 0 violations
+
+# Emergency: If tests are broken
+bundle exec rspec --fail-fast        # Stop on first failure
+bundle exec rspec spec/file_spec.rb  # Fix one file at a time
+```
+
+### Test Failure Recovery Protocol
+When you have multiple failing tests:
+
+1. **Don't panic-fix everything at once**
+2. **Create backup**: `cp -r spec spec_backup_$(date +%Y%m%d_%H%M%S)`  
+3. **Fix incrementally by service/file**:
+   ```bash
+   bundle exec rspec spec/services/http_client_service_spec.rb
+   bundle exec rspec spec/services/html_parser_service_spec.rb
+   bundle exec rspec spec/controllers/
+   bundle exec rspec spec/requests/
+   ```
+4. **Run full suite after each fix**: `bundle exec rspec`
+5. **Remove backup when done**: `rm -rf spec_backup_*`
+
+### Automated Testing Setup
+```bash
+# Git pre-commit hook (add to .git/hooks/pre-commit)
+#!/bin/sh
+echo "🧪 Running test suite..."
+bundle exec rspec
+if [ $? -ne 0 ]; then
+  echo "❌ TESTS FAILED - Cannot commit with failing tests"
+  echo "Fix all failing tests before committing"
+  exit 1
+fi
+echo "✅ All tests passing - commit approved"
+```
+
+### Test Maintenance Rules
+- [ ] **Run tests before ANY commit** - Zero tolerance for failing tests
+- [ ] **Fix tests immediately** when they break - Don't accumulate tech debt
+- [ ] **Add tests for new features** - No untested code in main branch
+- [ ] **Update tests when refactoring** - Keep tests in sync with code
+- [ ] **Remove obsolete tests** - Don't keep dead test code
+
+### Emergency Situations
+If you find 50+ failing tests:
+1. **STOP coding new features**
+2. **Focus ONLY on fixing tests**  
+3. **Get to 0 failures before any new work**
+4. **Root cause analysis** - How did this happen?
+5. **Update workflow** to prevent recurrence
+
 **Remember: Good tests are your safety net - invest in them like your application depends on it!**
+
+**🚨 ZERO TOLERANCE POLICY: Never commit, push, or merge with failing tests or rubocop violations!**
