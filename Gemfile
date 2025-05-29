@@ -11,6 +11,9 @@ gem "rails", "~> 7.1.0"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
 
+# SQLite for testing when PostgreSQL not available
+gem "sqlite3", "~> 1.4", group: :test
+
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", "~> 6.0"
 
