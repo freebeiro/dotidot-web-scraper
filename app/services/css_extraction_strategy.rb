@@ -1,20 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "../../lib/scraper_errors"
+require_relative "concerns/extracted_field"
 
 # CSS selector-based data extraction strategy
 # Extracts data from HTML documents using CSS selectors with error handling
 class CssExtractionStrategy
-  # Structure for extraction results
-  ExtractedField = Struct.new(:selector, :value, :error, keyword_init: true) do
-    def success?
-      error.nil?
-    end
-
-    def failed?
-      !success?
-    end
-  end
+  include ExtractedField
 
   # Maximum allowed selector length to prevent abuse
   MAX_SELECTOR_LENGTH = 1000

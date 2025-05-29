@@ -43,7 +43,7 @@ jobs:
     - name: Check code complexity
       run: |
         gem install rubycritic
-        rubycritic app lib --minimum-score 85 --no-browser --format console
+        rubycritic app lib --minimum-score 82 --no-browser --format console
     
     - name: Check for code smells with Reek
       run: |

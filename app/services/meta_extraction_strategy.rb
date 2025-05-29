@@ -1,20 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "../../lib/scraper_errors"
+require_relative "concerns/extracted_field"
 
 # Meta tag extraction strategy
 # Extracts meta tag content from HTML documents with support for name, property, and http-equiv attributes
 class MetaExtractionStrategy
-  # Structure for extraction results (reusing from CSS strategy for consistency)
-  ExtractedField = Struct.new(:selector, :value, :error, keyword_init: true) do
-    def success?
-      error.nil?
-    end
-
-    def failed?
-      !success?
-    end
-  end
+  include ExtractedField
 
   # Common meta tag attributes we support
   META_ATTRIBUTES = %w[name property http-equiv].freeze
