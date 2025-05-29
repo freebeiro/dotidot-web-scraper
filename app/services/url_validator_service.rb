@@ -49,7 +49,15 @@ class UrlValidatorService
     validate_scheme
     validate_host_security
 
-    @parsed_uri
+    {
+      valid: true,
+      url: @parsed_uri.to_s
+    }
+  rescue ScraperErrors::ValidationError, ScraperErrors::SecurityError => e
+    {
+      valid: false,
+      error: e.message
+    }
   end
 
   private
