@@ -106,8 +106,12 @@ This guide outlines the structured process for initiating a new project using a 
     
     **MANDATORY Rule Files (Always Generated):**
     - `rules/ai_workflow_rules.md` - Code reuse, modular development, NO NEW/UPDATED files, 4-step process enforcement
-    - `rules/live_rule_filtering_process.md` - Live rule filtering with continuous enforcement throughout project
     - At least 3-5 technology-specific rule files based on project requirements in `rules/` directory
+    
+    **MANDATORY Procedure Files (Always Generated):**
+    - `procedures/LIVE_RULE_FILTERING_PROCESS.md` - Live rule filtering with continuous enforcement throughout project
+    - `procedures/AI_HANDOFF_INSTRUCTIONS.md` - Complete instructions for AI continuity
+    - `procedures/UNPLANNED_TASK_PROCESS.md` - How to handle unplanned work
     
     **Testing Guidelines:** When generating testing guidelines (if testing was requested), the AI must ensure the draft covers standard levels (Unit, Integration, System/E2E) and include recommendations for testing infrastructure appropriate to the project type and classification.
 
@@ -208,22 +212,28 @@ This guide outlines the structured process for initiating a new project using a 
     **Bootstrap Completion Checklist:**
     - [ ] All rule files generated with proper research and structure
     - [ ] **MANDATORY: rules/ai_workflow_rules.md created** with continuous enforcement
-    - [ ] **MANDATORY: rules/live_rule_filtering_process.md created** with 4-step process
-    - [ ] PROJECT_PLAN.md created with detailed, testable steps
+    - [ ] **MANDATORY: procedures/LIVE_RULE_FILTERING_PROCESS.md created** with 4-step process
+    - [ ] **MANDATORY: procedures/AI_HANDOFF_INSTRUCTIONS.md created** for AI continuity
+    - [ ] **MANDATORY: procedures/UNPLANNED_TASK_PROCESS.md created** for handling unplanned work
+    - [ ] procedures/PROJECT_PLAN.md created with detailed, testable steps
     - [ ] Memory bank files created and populated
     - [ ] Live rule filtering process established
     - [ ] Quality gates and success criteria defined
-    - [ ] **AI_HANDOFF_INSTRUCTIONS.md generated** (see step 17)
-    - [ ] **LIVE_RULE_FILTERING_PROCESS.md generated** (see step 18)
+    - [ ] **procedures/AI_HANDOFF_INSTRUCTIONS.md generated** (see step 17)
+    - [ ] **procedures/LIVE_RULE_FILTERING_PROCESS.md generated** (see step 18)
+    - [ ] **procedures/UNPLANNED_TASK_PROCESS.md generated** (see step 19)
     - [ ] **All enforcement mechanisms automatically created**
     
-17. **AI Generates Handoff Instructions:** The AI automatically creates `AI_HANDOFF_INSTRUCTIONS.md` file containing complete instructions for any future AI assistant to seamlessly continue the project.
+17. **AI Generates Handoff Instructions:** The AI automatically creates `procedures/AI_HANDOFF_INSTRUCTIONS.md` file containing complete instructions for any future AI assistant to seamlessly continue the project.
 
-18. **AI Generates Live Rule Filtering Process:** The AI automatically creates `LIVE_RULE_FILTERING_PROCESS.md` file with detailed instructions for the mandatory 4-step process and continuous enforcement throughout the project.
+18. **AI Generates Live Rule Filtering Process:** The AI automatically creates `procedures/LIVE_RULE_FILTERING_PROCESS.md` file with detailed instructions for the mandatory 4-step process and continuous enforcement throughout the project.
+
+19. **AI Generates Unplanned Task Process:** The AI automatically creates `procedures/UNPLANNED_TASK_PROCESS.md` file with instructions for handling unplanned work that arises during development.
 
     **Enforcement File Requirements:**
-    - **AI_HANDOFF_INSTRUCTIONS.md**: Complete takeover instructions for any AI
-    - **LIVE_RULE_FILTERING_PROCESS.md**: Mandatory 4-step process with continuous enforcement
+    - **procedures/AI_HANDOFF_INSTRUCTIONS.md**: Complete takeover instructions for any AI
+    - **procedures/LIVE_RULE_FILTERING_PROCESS.md**: Mandatory 4-step process with continuous enforcement
+    - **procedures/UNPLANNED_TASK_PROCESS.md**: Process for handling unplanned work
     - **Bootstrap completion checklist** in each file
     - **Violation detection and recovery** protocols
     - **Self-monitoring checkpoints** for AI assistants
@@ -265,13 +275,14 @@ This guide outlines the structured process for initiating a new project using a 
     
     🔧 ENFORCEMENT MECHANISMS CREATED:
     - ✅ rules/ai_workflow_rules.md - Continuous 4-step process enforcement
-    - ✅ rules/live_rule_filtering_process.md - Mandatory rule filtering for every task
-    - ✅ AI_HANDOFF_INSTRUCTIONS.md - Complete AI continuity instructions
+    - ✅ procedures/LIVE_RULE_FILTERING_PROCESS.md - Mandatory rule filtering for every task
+    - ✅ procedures/AI_HANDOFF_INSTRUCTIONS.md - Complete AI continuity instructions
+    - ✅ procedures/UNPLANNED_TASK_PROCESS.md - Process for handling unplanned work
     
     📂 All files saved to: [directory path]
     
     🤖 AI HANDOFF READY: Any AI assistant can now continue this project using the prompt:
-    'Please take over this project by reading and following the AI_HANDOFF_INSTRUCTIONS.md file at [file path]'
+    'Please take over this project by reading and following the procedures/AI_HANDOFF_INSTRUCTIONS.md file at [file path]'
     
     ⚠️ CRITICAL: Every task from this point forward MUST follow the 4-step process:
     Step A: Live Rule Filtering → Step B: Implementation → Step C: Testing → Step D: Commit

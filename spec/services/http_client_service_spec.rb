@@ -1,0 +1,428 @@
+require 'rails_helper'
+require 'webmock/rspec'
+
+RSpec.describe HttpClientService do
+  before do
+    WebMock.disable_net_connect!(allow_localhost: true)
+  end
+
+  after do
+    WebMock.reset!
+  end
+
+  describe '.call' do
+    let(:url) { 'https://example.com' }
+    let(:html_content) { '<html><body><h1>Hello World</h1></body></html>' }
+
+    context 'successful requests' do
+      before do
+        stub_request(:get, url)
+          .to_return(status: 200, body: html_content, headers: { 'Content-Type' => 'text/html' })
+      end
+
+      it 'returns successful result with content' do
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be true
+        expect(result[:body]).to eq(html_content)
+        expect(result[:status]).to eq(200)
+        expect(result[:headers]).to include('content-type' => 'text/html')
+      end
+
+      it 'includes request metadata' do
+        result = described_class.call(url)
+        
+        expect(result[:url]).to eq(url)
+        expect(result[:response_time]).to be_a(Float)
+        expect(result[:response_time]).to be >= 0
+      end
+
+      it 'follows redirects' do
+        stub_request(:get, url)
+          .to_return(status: 301, headers: { 'Location' => 'https://example.com/new' })
+        stub_request(:get, 'https://example.com/new')
+          .to_return(status: 200, body: html_content)
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be true
+        expect(result[:body]).to eq(html_content)
+        expect(result[:url]).to eq('https://example.com/new')
+      end
+
+      it 'handles multiple redirects' do
+        stub_request(:get, url)
+          .to_return(status: 301, headers: { 'Location' => 'https://example.com/step1' })
+        stub_request(:get, 'https://example.com/step1')
+          .to_return(status: 302, headers: { 'Location' => 'https://example.com/step2' })
+        stub_request(:get, 'https://example.com/step2')
+          .to_return(status: 200, body: html_content)
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be true
+        expect(result[:url]).to eq('https://example.com/step2')
+      end
+
+      it 'respects max redirect limit' do
+        current_url = url
+        10.times do |i|
+          next_url = "https://example.com/redirect#{i}"
+          stub_request(:get, current_url)
+            .to_return(status: 301, headers: { 'Location' => next_url })
+          current_url = next_url
+        end
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to include('Too many redirects')
+      end
+    end
+
+    context 'custom headers' do
+      it 'sends custom user agent' do
+        stub_request(:get, url)
+          .with(headers: { 'User-Agent' => /DotidotScraper/ })
+          .to_return(status: 200, body: html_content)
+
+        result = described_class.call(url)
+        expect(result[:success]).to be true
+      end
+
+      it 'accepts custom headers' do
+        custom_headers = { 'X-Custom-Header' => 'custom-value' }
+        
+        stub_request(:get, url)
+          .with(headers: { 'X-Custom-Header' => 'custom-value' })
+          .to_return(status: 200, body: html_content)
+
+        result = described_class.call(url, headers: custom_headers)
+        expect(result[:success]).to be true
+      end
+
+      it 'merges custom headers with defaults' do
+        stub_request(:get, url)
+          .with(headers: { 
+            'User-Agent' => /DotidotScraper/,
+            'Accept' => 'text/html,application/xhtml+xml',
+            'X-Custom' => 'value'
+          })
+          .to_return(status: 200, body: html_content)
+
+        result = described_class.call(url, headers: { 'X-Custom' => 'value' })
+        expect(result[:success]).to be true
+      end
+    end
+
+    context 'timeout handling' do
+      it 'times out on slow connections' do
+        stub_request(:get, url).to_timeout
+
+        result = described_class.call(url, timeout: 1)
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to include('timeout')
+      end
+
+      it 'respects custom timeout' do
+        stub_request(:get, url).to_return(status: 200, body: html_content).with_delay(2)
+
+        result = described_class.call(url, timeout: 3)
+        
+        expect(result[:success]).to be true
+      end
+
+      it 'uses default timeout' do
+        stub_request(:get, url).to_timeout
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to include('timeout')
+      end
+    end
+
+    context 'retry logic' do
+      it 'retries on temporary failures' do
+        call_count = 0
+        stub_request(:get, url)
+          .to_return do |request|
+            call_count += 1
+            if call_count < 3
+              { status: 503 }
+            else
+              { status: 200, body: html_content }
+            end
+          end
+
+        result = described_class.call(url, max_retries: 3)
+        
+        expect(result[:success]).to be true
+        expect(result[:body]).to eq(html_content)
+        expect(call_count).to eq(3)
+      end
+
+      it 'retries with exponential backoff' do
+        start_time = Time.current
+        stub_request(:get, url).to_return(status: 503).times(2).then
+          .to_return(status: 200, body: html_content)
+
+        result = described_class.call(url, max_retries: 2)
+        elapsed = Time.current - start_time
+        
+        expect(result[:success]).to be true
+        expect(elapsed).to be >= 0.3 # At least base_delay + (base_delay * 2)
+      end
+
+      it 'does not retry on client errors' do
+        call_count = 0
+        stub_request(:get, url)
+          .to_return do |request|
+            call_count += 1
+            { status: 404 }
+          end
+
+        result = described_class.call(url, max_retries: 3)
+        
+        expect(result[:success]).to be false
+        expect(result[:status]).to eq(404)
+        expect(call_count).to eq(1)
+      end
+
+      it 'retries on network errors' do
+        call_count = 0
+        stub_request(:get, url)
+          .to_return do |request|
+            call_count += 1
+            if call_count < 2
+              raise Errno::ECONNREFUSED
+            else
+              { status: 200, body: html_content }
+            end
+          end
+
+        result = described_class.call(url, max_retries: 2)
+        
+        expect(result[:success]).to be true
+        expect(call_count).to eq(2)
+      end
+
+      it 'gives up after max retries' do
+        stub_request(:get, url).to_return(status: 503)
+
+        result = described_class.call(url, max_retries: 2)
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to include('Failed after 3 attempts')
+      end
+    end
+
+    context 'error handling' do
+      it 'handles connection refused' do
+        stub_request(:get, url).to_raise(Errno::ECONNREFUSED)
+
+        result = described_class.call(url, max_retries: 0)
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to include('Connection refused')
+      end
+
+      it 'handles DNS resolution failures' do
+        stub_request(:get, url).to_raise(SocketError.new('getaddrinfo: Name or service not known'))
+
+        result = described_class.call(url, max_retries: 0)
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to include('DNS resolution failed')
+      end
+
+      it 'handles SSL errors' do
+        stub_request(:get, url).to_raise(OpenSSL::SSL::SSLError.new('SSL_connect error'))
+
+        result = described_class.call(url, max_retries: 0)
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to include('SSL error')
+      end
+
+      it 'handles malformed responses' do
+        stub_request(:get, url)
+          .to_return(status: 200, body: "\xFF\xFE", headers: { 'Content-Type' => 'text/html' })
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be true
+        expect(result[:body]).to be_a(String)
+      end
+
+      it 'handles 4xx errors' do
+        stub_request(:get, url).to_return(status: 404, body: 'Not Found')
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be false
+        expect(result[:status]).to eq(404)
+        expect(result[:error]).to include('HTTP 404')
+      end
+
+      it 'handles 5xx errors' do
+        stub_request(:get, url).to_return(status: 500, body: 'Internal Server Error')
+
+        result = described_class.call(url, max_retries: 0)
+        
+        expect(result[:success]).to be false
+        expect(result[:status]).to eq(500)
+        expect(result[:error]).to include('HTTP 500')
+      end
+    end
+
+    context 'content handling' do
+      it 'handles different encodings' do
+        utf8_content = '<html><body>Hello 世界</body></html>'
+        stub_request(:get, url)
+          .to_return(
+            status: 200, 
+            body: utf8_content.encode('UTF-8'),
+            headers: { 'Content-Type' => 'text/html; charset=utf-8' }
+          )
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be true
+        expect(result[:body]).to include('世界')
+        expect(result[:body].encoding).to eq(Encoding::UTF_8)
+      end
+
+      it 'handles gzipped content' do
+        require 'zlib'
+        gzipped = Zlib.gzip(html_content)
+        
+        stub_request(:get, url)
+          .to_return(
+            status: 200,
+            body: gzipped,
+            headers: { 'Content-Encoding' => 'gzip', 'Content-Type' => 'text/html' }
+          )
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be true
+        expect(result[:body]).to eq(html_content)
+      end
+
+      it 'rejects non-HTML content types' do
+        stub_request(:get, url)
+          .to_return(status: 200, body: 'binary data', headers: { 'Content-Type' => 'application/pdf' })
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to include('Invalid content type')
+      end
+
+      it 'handles missing content type' do
+        stub_request(:get, url)
+          .to_return(status: 200, body: html_content, headers: {})
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be true
+        expect(result[:body]).to eq(html_content)
+      end
+
+      it 'enforces size limits' do
+        large_content = '<html>' + ('x' * 15_000_000) + '</html>'
+        stub_request(:get, url)
+          .to_return(status: 200, body: large_content)
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to include('Response too large')
+      end
+    end
+
+    context 'performance' do
+      it 'tracks response time accurately' do
+        stub_request(:get, url)
+          .to_return(status: 200, body: html_content)
+          .with_delay(0.5)
+
+        result = described_class.call(url)
+        
+        expect(result[:response_time]).to be >= 0.5
+        expect(result[:response_time]).to be < 1.0
+      end
+
+      it 'handles concurrent requests' do
+        stub_request(:get, /example\.com/)
+          .to_return(status: 200, body: html_content)
+
+        urls = (1..5).map { |i| "https://example.com/page#{i}" }
+        results = urls.map { |u| Thread.new { described_class.call(u) } }.map(&:value)
+        
+        expect(results).to all(include(success: true))
+        expect(results.map { |r| r[:url] }).to match_array(urls)
+      end
+    end
+
+    context 'edge cases' do
+      it 'handles empty response body' do
+        stub_request(:get, url)
+          .to_return(status: 200, body: '', headers: { 'Content-Type' => 'text/html' })
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be true
+        expect(result[:body]).to eq('')
+      end
+
+      it 'handles very long URLs' do
+        long_url = "https://example.com/?" + ('param=value&' * 500)
+        stub_request(:get, long_url)
+          .to_return(status: 200, body: html_content)
+
+        result = described_class.call(long_url)
+        
+        expect(result[:success]).to be true
+      end
+
+      it 'handles special characters in URLs' do
+        special_url = 'https://example.com/path?q=hello%20world&foo=bar%2Bbaz'
+        stub_request(:get, special_url)
+          .to_return(status: 200, body: html_content)
+
+        result = described_class.call(special_url)
+        
+        expect(result[:success]).to be true
+      end
+
+      it 'handles circular redirects' do
+        stub_request(:get, url)
+          .to_return(status: 301, headers: { 'Location' => 'https://example.com/a' })
+        stub_request(:get, 'https://example.com/a')
+          .to_return(status: 301, headers: { 'Location' => 'https://example.com/b' })
+        stub_request(:get, 'https://example.com/b')
+          .to_return(status: 301, headers: { 'Location' => url })
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be false
+        expect(result[:error]).to include('redirect')
+      end
+
+      it 'handles relative redirects' do
+        stub_request(:get, url)
+          .to_return(status: 301, headers: { 'Location' => '/new-path' })
+        stub_request(:get, 'https://example.com/new-path')
+          .to_return(status: 200, body: html_content)
+
+        result = described_class.call(url)
+        
+        expect(result[:success]).to be true
+        expect(result[:url]).to eq('https://example.com/new-path')
+      end
+    end
+  end
+end
