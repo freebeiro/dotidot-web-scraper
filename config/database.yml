@@ -54,14 +54,13 @@ development:
 # re-generated from your development database when you run "rake".
 # Do not set this db to the same as development or production.
 test:
+  <% if ENV['CI'] || system('pg_isready', out: File::NULL, err: File::NULL) %>
   <<: *default
   database: dotidot_scraper_test
-  # Fallback to SQLite if PostgreSQL is not available locally
-  <% if ENV['CI'] || system('pg_isready', out: File::NULL, err: File::NULL) %>
-  adapter: postgresql
   <% else %>
   adapter: sqlite3
   database: db/test.sqlite3
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   <% end %>
 
 # As with config/credentials.yml, you never want to store sensitive information,
