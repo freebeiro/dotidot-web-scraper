@@ -65,6 +65,51 @@ git checkout -b feature/your-feature
 - [ ] `test/api-integration`
 - [ ] `security/input-sanitization`
 - [ ] `refactor/service-objects`
+- [ ] `debug/fix-rubocop-rspec-issues` (DEBUGGING_TASK branches)
+
+## 🔧 DEBUGGING_TASK Workflow (MANDATORY)
+
+### When to Create Debug Branch
+- [ ] **`bundle exec rubocop -A && bundle exec rspec` fails**
+- [ ] **Recurring test failures** (same test fails multiple times)  
+- [ ] **RuboCop violations** that auto-fix can't resolve
+- [ ] **Integration failures** between services/components
+- [ ] **Complex refactoring** that might break existing functionality
+
+### Debug Branch Creation (CRITICAL)
+```bash
+# ✅ CORRECT - Always create debug branch from feature branch
+git checkout feature/your-current-feature
+git checkout -b debug/fix-specific-issue
+
+# ❌ WRONG - Never debug directly on feature branch
+# Making experimental changes on feature branch
+# Committing debug code to feature branch
+```
+
+### Debug Branch Rules
+- [ ] **ALWAYS branch from feature branch** (not main)
+- [ ] **Experiment freely** - debug branch is disposable
+- [ ] **Commit frequently** with `debug:` prefix
+- [ ] **Document findings** in debug_log.md
+- [ ] **NEVER merge debug branch** directly to feature branch
+
+### Debug Branch Cleanup
+```bash
+# Option 1: Delete after successful debugging
+git checkout feature/your-feature
+git branch -D debug/fix-specific-issue
+
+# Option 2: Keep for reference (complex issues)
+git push origin debug/fix-specific-issue
+# Document branch location in DEBUGGING_TASK log
+```
+
+### Applying Debug Solutions
+- [ ] **Return to clean feature branch** before applying solution
+- [ ] **Implement ONLY the final solution** (no debug artifacts)  
+- [ ] **Verify complete fix** with all quality checks
+- [ ] **Use proper commit messages** (not debug prefixes)
 
 ## 🔄 Daily Workflow Checklist
 

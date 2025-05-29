@@ -24,6 +24,7 @@ You are taking over a **Ruby on Rails REST API web scraper project** for a techn
 - `procedures/PROJECT_PLAN.md` - Step-by-step implementation guide
 - `procedures/LIVE_RULE_FILTERING_PROCESS.md` - Mandatory process for every step
 - `procedures/UNPLANNED_TASK_PROCESS.md` - How to handle unplanned work
+- `procedures/DEBUGGING_WORKFLOW.md` - **MANDATORY for errors/test failures**
 - `memory-bank/progress.md` - Current status and completed work
 - `memory-bank/activeContext.md` - Immediate focus and context
 
@@ -171,20 +172,47 @@ You are taking over a **Ruby on Rails REST API web scraper project** for a techn
 
 ---
 
-## 📋 **STEP 7: READY CHECKLIST**
+## 🚨 **STEP 7: ERROR HANDLING & DEBUGGING**
+
+### **🔥 CRITICAL: When Errors or Test Failures Occur**
+
+**MANDATORY TRIGGERS** - Immediately enter debugging mode when:
+- `bundle exec rubocop -A && bundle exec rspec` fails
+- Recurring test failures (same test fails multiple times)
+- RuboCop violations that auto-fix can't resolve
+- Integration failures between services/components
+
+### **DEBUGGING_TASK Procedure:**
+1. **STOP current work immediately**
+2. **Read**: `procedures/DEBUGGING_WORKFLOW.md` - Complete debugging procedure
+3. **Create debug branch**: `git checkout -b debug/fix-[issue]` from feature branch (NOT main)
+4. **Experiment safely** on debug branch
+5. **Apply clean solution** to feature branch only
+6. **Document the debugging process** in unplanned tasks
+
+### **Key Debugging Rules:**
+- **NEVER experiment on feature branches** - always use debug branches
+- **NEVER commit debug artifacts** to feature/main branches  
+- **ALWAYS verify complete solution** before applying to feature branch
+- **MUST document debugging** for future AI sessions
+
+---
+
+## 📋 **STEP 8: READY CHECKLIST**
 
 **Before starting any work, confirm:**
 - [ ] Read `memory-bank/progress.md` for current status
 - [ ] Found next step in `PROJECT_PLAN.md`
 - [ ] Understand the 4-step process (Filter → Implement → Test → Commit)
 - [ ] Located all 8 rule files for filtering
+- [ ] **Know when to use DEBUGGING_WORKFLOW.md for errors**
 - [ ] Ready to follow AI workflow rules (no throwaway code)
 - [ ] Can provide both automated and manual testing
 - [ ] Will update progress tracking after completion
 
 ---
 
-## 🚀 **STEP 8: EXAMPLE HANDOFF PROCESS**
+## 🚀 **STEP 9: EXAMPLE HANDOFF PROCESS**
 
 ### **Sample AI Response When Taking Over:**
 

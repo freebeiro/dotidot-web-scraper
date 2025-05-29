@@ -81,11 +81,13 @@ class CssExtractionStrategy
       when String
         { selector: field, name: field, type: "text" }
       when Hash
-        # Preserve all hash keys, just ensure consistent format
-        normalized = field.dup
-        normalized[:selector] ||= normalized["selector"]
-        normalized[:name] ||= normalized["name"] || normalized[:selector] || normalized["selector"]
-        normalized[:type] ||= normalized["type"] || "text"
+        # Normalize hash keys to symbols for consistent access
+        normalized = {}
+        normalized[:selector] = field[:selector] || field["selector"]
+        normalized[:name] = field[:name] || field["name"] || normalized[:selector]
+        normalized[:type] = field[:type] || field["type"] || "text"
+        normalized[:attribute] = field[:attribute] || field["attribute"]
+        normalized[:multiple] = field[:multiple] || field["multiple"] || false
         normalized
       else
         raise ScraperErrors::ValidationError, "Invalid field format: #{field.class}"
@@ -94,8 +96,7 @@ class CssExtractionStrategy
   end
 
   def validate_inputs
-    raise ScraperErrors::ValidationError, "Document cannot be nil" if @document.nil?
-    raise ScraperErrors::ValidationError, "Fields cannot be empty" if @fields.empty?
+    raise ScraperErrors::ValidationError, "Document is nil" if @document.nil?
 
     @fields.each do |field|
       validate_selector(field[:selector])
@@ -149,16 +150,15 @@ class CssExtractionStrategy
 
   def extract_single_value(element, extraction_type, field)
     case extraction_type
-    when "text"
-      clean_text(element.text)
     when "html"
       element.inner_html
     when "attribute"
       attribute_name = field[:attribute]
       raise ScraperErrors::ValidationError, "Attribute name required for attribute extraction" unless attribute_name
+
       element[attribute_name]
-    else
-      clean_text(element.text) # Default to text
+    else # "text" or default
+      clean_text(element.text)
     end
   end
 
