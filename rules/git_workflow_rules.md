@@ -25,6 +25,32 @@
 - [ ] `security: implement rate limiting per IP`
 - [ ] `refactor: extract validation into service class`
 
+## 🚨 Feature Branch Enforcement (CRITICAL)
+
+### NEVER Work on Main Branch
+- [ ] **NEVER commit directly to main** - Always use feature branches
+- [ ] **NEVER push directly to main** - Always create PR for review
+- [ ] **ALWAYS create feature branch first** - Before any development work
+- [ ] **ALWAYS update from main before branching** - Ensure latest code
+
+### Starting New Feature (MANDATORY)
+```bash
+# ✅ CORRECT - Always do this
+git checkout main
+git pull origin main  # Get latest changes
+git checkout -b feature/your-feature
+
+# ❌ WRONG - Never do this
+# Making changes directly on main
+# Committing directly to main
+```
+
+### Feature Branch Rules
+- [ ] **Create from updated main** - Always pull latest main first
+- [ ] **One feature per branch** - Don't mix unrelated changes
+- [ ] **Delete after merging** - Keep repository clean
+- [ ] **Never rebase public branches** - Only rebase local branches
+
 ## 🌿 Branch Naming Checklist
 
 ### Before Creating Branch
@@ -43,9 +69,10 @@
 ## 🔄 Daily Workflow Checklist
 
 ### Starting Work Session
-- [ ] `git checkout main`
-- [ ] `git pull origin main`
-- [ ] `git checkout -b feature/your-feature`
+- [ ] `git checkout main` (NEVER work directly on main)
+- [ ] `git pull origin main` (Get latest changes)
+- [ ] `git checkout -b feature/your-feature` (ALWAYS create feature branch)
+- [ ] Verify you're NOT on main: `git branch --show-current`
 
 ### During Development
 - [ ] **Commit frequently** (every logical change)
@@ -54,9 +81,30 @@
 - [ ] **Only commit related changes together**
 
 ### Ending Work Session
-- [ ] `git push origin your-branch-name`
-- [ ] **OR** merge to main if feature complete
-- [ ] Clean up merged branches
+- [ ] `git push origin your-branch-name` (Push to feature branch)
+- [ ] Create Pull Request for review (NEVER push directly to main)
+- [ ] Clean up merged branches after PR approval
+
+## 🔀 Pull Request Workflow
+
+### Before Creating PR
+- [ ] All tests pass on feature branch
+- [ ] Branch is up to date with main
+- [ ] Commits follow proper format
+- [ ] Code follows project rules
+
+### PR Process
+```bash
+# Update feature branch with latest main
+git checkout main
+git pull origin main
+git checkout feature/your-feature
+git merge main  # or rebase if preferred
+git push origin feature/your-feature
+
+# Create PR via GitHub/GitLab UI
+# NEVER merge directly without review
+```
 
 ## ⚡ Quick Commit Process
 

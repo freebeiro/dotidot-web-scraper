@@ -29,6 +29,12 @@ This document defines the **Live Rule Filtering Process** that must be followed 
 
 4. **Create focused mini-checklist** of 3-8 relevant rule items maximum
 
+**IMPORTANT: Filtered Rules Handling**
+- **DO NOT create separate files** for filtered rules
+- **Perform filtering inline** in your response
+- **Document filtered rules** in progress.md after task completion
+- This keeps the project clean while maintaining traceability
+
 **Example Live Filtering:**
 ```markdown
 ## Live Rule Filtering for Step 3: Basic Error Classes
@@ -101,7 +107,7 @@ curl -X GET "http://localhost:3000/endpoint"
 
 ### **How to Resume Work:**
 1. **Read the progress file** to understand last completed step
-2. **Find the next step** in PROJECT_PLAN.md
+2. **Find the next step** in procedures/PROJECT_PLAN.md
 3. **Follow this Live Rule Filtering Process** exactly
 4. **Update progress file** after completion
 

@@ -21,8 +21,9 @@ You are taking over a **Ruby on Rails REST API web scraper project** for a techn
 **Base Directory**: `/Users/freebeiro/Documents/fcr/claudefiles/dotidot-scraper/`
 
 **Essential Files to Reference:**
-- `PROJECT_PLAN.md` - Step-by-step implementation guide
-- `LIVE_RULE_FILTERING_PROCESS.md` - Mandatory process for every step
+- `procedures/PROJECT_PLAN.md` - Step-by-step implementation guide
+- `procedures/LIVE_RULE_FILTERING_PROCESS.md` - Mandatory process for every step
+- `procedures/UNPLANNED_TASK_PROCESS.md` - How to handle unplanned work
 - `memory-bank/progress.md` - Current status and completed work
 - `memory-bank/activeContext.md` - Immediate focus and context
 
@@ -47,6 +48,7 @@ You are taking over a **Ruby on Rails REST API web scraper project** for a techn
 2. **Create focused mini-checklist** (3-8 items max) of ONLY relevant rules
 3. **Document which rules ignored** and why
 4. **Never apply all rules** - only cherry-picked ones
+5. **IMPORTANT**: Do NOT create separate files for filtered rules - perform filtering inline and document in progress.md after completion
 
 #### **🛠️ Step B: Implementation**
 - Follow ONLY the filtered rules from Step A
@@ -264,8 +266,8 @@ Ready for Step 2: Essential Gems Setup
 ## 🔗 **Quick Reference**
 
 **Base Directory**: `/Users/freebeiro/Documents/fcr/claudefiles/dotidot-scraper/`
-**Process File**: `LIVE_RULE_FILTERING_PROCESS.md`
-**Implementation Plan**: `PROJECT_PLAN.md`
+**Process File**: `procedures/LIVE_RULE_FILTERING_PROCESS.md`
+**Implementation Plan**: `procedures/PROJECT_PLAN.md`
 **Current Status**: `memory-bank/progress.md`
 **Active Context**: `memory-bank/activeContext.md`
 

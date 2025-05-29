@@ -2,68 +2,120 @@
 
 ## 🎯 Current Focus
 
-**Active Phase**: Implementation Ready  
-**Current Step**: Step 1 - Rails Application Setup  
-**Priority**: Foundation setup with security-first approach
+**Active Phase**: Foundation Setup In Progress  
+**Current Step**: Step 5 - HTTP Client Service  
+**Priority**: Create HTTP client for fetching web pages safely
+
+## 📋 HTTP Client Service - Focused Rules
+
+### 🎯 RELEVANT RULES (5 Total)
+
+1. **Service Object Design (Code Quality Rule #2)**
+   - Single responsibility: HTTP fetching only
+   - .call class method pattern for stateless operations
+   - Return consistent data structure {body:, status:, headers:}
+   - Proper error handling with custom exceptions
+   - Private methods for internal logic
+
+2. **HTTP Client Performance (Performance Rule #4)**
+   - Use HTTP.rb for best performance
+   - Set reasonable timeouts (connect: 5s, read: 15s)
+   - Implement connection pooling and persistent connections
+   - Handle response streaming for large pages
+   - Retry logic with exponential backoff (max 3 retries)
+
+3. **HTTP Request Mocking (Testing Rule #5)**
+   - Use WebMock to stub all external HTTP requests
+   - Test both success and failure responses
+   - Mock timeouts and network errors
+   - Create realistic stub responses
+   - Verify request headers and parameters
+
+4. **Input Validation & Security (Security Rule #1)**
+   - Validate URL format and length (max 2048 chars)
+   - Block localhost and internal IPs (SSRF prevention)
+   - Only allow http/https schemes
+   - Set appropriate User-Agent header
+   - Handle SSL/TLS properly
+
+5. **Error Handling Patterns (Code Quality Rule #5)**
+   - Create custom exception hierarchy (NetworkError, TimeoutError, InvalidResponseError)
+   - Log errors with context for debugging
+   - Return user-friendly error messages
+   - Handle partial failures gracefully
+   - Implement circuit breaker pattern for repeated failures
+
+### 🚫 IGNORED RULES (Not Relevant)
+
+- **API Design Rules** - HTTP client is internal service, not REST endpoint
+- **Database Performance Rules** - No database interaction in HTTP client
+- **Background Processing Rules** - Synchronous HTTP client, no Sidekiq needed
+- **Rails MVC Rules** - Service object, not controller/model
+- **Meta Tag Extraction Rules** - Handled by separate extraction service
+- **CSS Selector Rules** - Parsing done elsewhere
+- **Rate Limiting Rules** - Implemented at controller level, not HTTP client
+- **Git Workflow Rules** - Development process, not implementation concern
 
 ## 📋 Immediate Context
 
 ### **What We're Building Right Now:**
-- Rails 7.1 API application initialization
-- Basic project structure with PostgreSQL
-- RSpec testing framework setup
-- Essential gem configuration
+- HTTP client service with timeout configuration
+- Proper User-Agent and error handling
+- Retry logic with exponential backoff
+- WebMock testing for HTTP scenarios
 
 ### **Success Criteria for Current Step:**
-- [ ] Rails server starts successfully
-- [ ] Database creates without errors
-- [ ] RSpec runs without errors (even with 0 tests)
-- [ ] Basic project structure follows Rails conventions
+- [ ] HttpClientService with timeout configuration
+- [ ] Add proper User-Agent headers
+- [ ] Implement retry logic with exponential backoff
+- [ ] Create tests using WebMock for various scenarios
+- [ ] Handle timeouts, errors, and retries correctly
 
 ### **Testing Requirements:**
-- **Automated**: `bundle exec rspec`, `rails db:create RAILS_ENV=test`
-- **Manual**: Server startup, console access, basic curl test
+- **Automated**: RSpec tests with WebMock for HTTP scenarios
+- **Manual**: Rails console testing with real URLs
 
 ## 🧠 Key Decisions for This Step
 
-### **Technology Choices:**
-- **Rails 7.1** (API mode) - Latest stable version
-- **PostgreSQL** - Reliable, scalable database
-- **RSpec** - Professional testing framework
-- **FactoryBot** - Clean test data generation
+### **Core Gem Choices:**
+- **Nokogiri** - Robust HTML parsing
+- **HTTP.rb** - Fast, clean HTTP client
+- **Redis** - Caching and session storage
+- **Sidekiq** - Background job processing
 
-### **Architecture Principles:**
-- **API-only mode** - No view rendering needed
-- **Service object pattern** - Business logic separation
-- **Security-first** - Input validation from step 1
-- **Test-driven** - Tests for every component
+### **Testing Gem Additions:**
+- **WebMock** - HTTP request stubbing
+- **Shoulda-matchers** - Enhanced RSpec matchers
+- **Faker** - Realistic test data (already added)
+- **FactoryBot** - Test object generation (already added)
 
 ## 🔄 Implementation Context
 
 ### **Current Rule Focus:**
-**When implementing Step 1, focus on:**
-- **Git Workflow**: Proper commit message format
-- **Code Quality**: Rails file structure conventions
-- **Testing Strategy**: RSpec setup and configuration
-- **AI Workflow**: Analyze existing files before creating new ones
+**When implementing Step 2, focus on:**
+- **Code Quality**: Gemfile organization in proper groups
+- **Testing Strategy**: Testing gem configuration in rails_helper
+- **Web Scraping**: Core gems needed (nokogiri, http)
+- **Performance**: Redis and background processing setup
 
 ### **Rules to Ignore for Now:**
+- Detailed security patterns (not handling input yet)
 - API design patterns (no API endpoints yet)
-- Security validation (no user input yet)
-- Web scraping specifics (no scraping logic yet)
-- Advanced performance optimization (basic setup only)
+- Complex performance optimization (basic gems only)
+- Advanced web scraping techniques (core setup only)
 
 ## 📊 Progress Context
 
-### **Bootstrap Completion:**
-✅ All 8 rule files created and documented  
-✅ PROJECT_PLAN.md with 28 detailed steps  
-✅ Memory bank files for context continuity  
-✅ Live rule filtering process documented  
-✅ AI workflow rules for code reuse
+### **Step 2 Completion:**
+✅ Essential gems added and configured successfully  
+✅ Nokogiri, HTTP.rb, Redis, Sidekiq gems installed  
+✅ WebMock and Shoulda-matchers testing gems added  
+✅ RSpec configured with new testing helpers  
+✅ All gems load correctly in Rails console  
+✅ Proper commit created with gem organization
 
 ### **Implementation Progress:**
-- **Phase 1 (Steps 1-8)**: Foundation Setup - **0% complete**
+- **Phase 1 (Steps 1-8)**: Foundation Setup - **25.0% complete** (2/8)
 - **Phase 2 (Steps 9-14)**: API Implementation - **0% complete**  
 - **Phase 3 (Steps 15-19)**: Performance & Caching - **0% complete**
 - **Phase 4 (Steps 20-24)**: Quality & Documentation - **0% complete**
@@ -71,20 +123,20 @@
 
 ## ⚡ Next Actions
 
-### **Immediate Task (Step 1):**
-1. **Live Rule Filtering** - Identify relevant rules for Rails setup
-2. **Rails Application Creation** - `rails new dotidot-web-scraper --api --database=postgresql`
-3. **Gem Configuration** - Add rspec-rails, factory_bot_rails
-4. **Database Setup** - Configure development/test databases
-5. **RSpec Installation** - `rails generate rspec:install`
-6. **Testing & Validation** - Verify server starts, database works, RSpec runs
-7. **Commit** - `chore: initialize Rails API application with RSpec setup`
+### **Immediate Task (Step 3):**
+1. **Live Rule Filtering** - Identify relevant rules for error handling
+2. **ScraperErrors Module** - Create lib/scraper_errors.rb file
+3. **Exception Classes** - ValidationError, SecurityError, NetworkError
+4. **Rails Configuration** - Ensure lib directory autoloading
+5. **RSpec Tests** - Test exception inheritance and messaging
+6. **Testing & Validation** - Verify exceptions work in console
+7. **Commit** - `feat: add custom exception hierarchy for error handling`
 
 ### **Following Steps (Phase 1):**
-- **Step 2**: Essential gems (nokogiri, http, redis, sidekiq)
-- **Step 3**: Custom exception hierarchy
 - **Step 4**: URL validation service with SSRF protection
 - **Step 5**: HTTP client service with retry logic
+- **Step 6**: Basic HTML parser service
+- **Step 7**: CSS extraction strategy
 
 ## 🎯 Quality Focus
 
@@ -116,6 +168,6 @@
 
 ---
 
-**Focus**: Get Rails foundation solid and tested before moving to business logic. Every step must be testable and committed properly.
+**Focus**: Create clean exception hierarchy for proper error handling throughout the application.
 
-**Next Update**: After completing Step 1 - Rails Application Setup
+**Next Update**: After completing Step 3 - Basic Error Classes

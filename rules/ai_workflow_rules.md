@@ -202,7 +202,7 @@ end
 - [ ] **🚨 MANDATORY: 4-Step Process Completed**
   - [ ] Step A: Live Rule Filtering documented
   - [ ] Step B: Implementation follows filtered rules only
-  - [ ] Step C: Both automated and manual testing passed
+  - [ ] Step C: Both automated tests, code quality (RuboCop), and manual testing passed
   - [ ] Step D: Proper commit made and progress updated
 
 ## 🚨 Continuous Workflow Enforcement
@@ -217,9 +217,10 @@ end
 ### **Every Commit Validation (MANDATORY)**
 **Before making ANY commit:**
 1. **Verify automated tests**: All RSpec/tests must pass
-2. **Verify manual tests**: Console/curl verification completed
-3. **Verify deliverable**: Step objective achieved
-4. **Update progress**: memory-bank/progress.md and activeContext.md updated
+2. **Verify code quality**: RuboCop must pass with no offenses
+3. **Verify manual tests**: Console/curl verification completed
+4. **Verify deliverable**: Step objective achieved
+5. **Update progress**: memory-bank/progress.md and activeContext.md updated
 
 ### **Every Handoff Validation (MANDATORY)**
 **When ANY AI takes over or hands off:**
@@ -232,6 +233,7 @@ end
 **Warning Signs of Process Violations:**
 - Implementation started without mentioning rule filtering
 - Commits made without testing commands provided
+- Commits made without RuboCop validation
 - Progress files not updated after task completion
 - Rules applied wholesale instead of cherry-picked
 - Temporary or throwaway code created

@@ -1,0 +1,63 @@
+# RuboCop configuration for Dotidot Web Scraper
+# This configuration enforces Ruby and Rails best practices
+
+require:
+  - rubocop-rails
+
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - 'bin/**/*'
+    - 'db/**/*'
+    - 'config/**/*'
+    - 'script/**/*'
+    - 'vendor/**/*'
+    - 'node_modules/**/*'
+    - 'tmp/**/*'
+    - 'storage/**/*'
+    - 'log/**/*'
+
+# Rails specific configuration
+Rails:
+  Enabled: true
+
+# Style configurations
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+# Metrics configurations
+Metrics/MethodLength:
+  Max: 28
+
+Metrics/ClassLength:
+  Max: 150
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+    - 'config/routes.rb'
+
+Metrics/AbcSize:
+  Max: 26
+
+# Layout configurations
+Layout/LineLength:
+  Max: 120
+  Exclude:
+    - 'spec/**/*'
+
+# Service object pattern support
+Style/ClassAndModuleChildren:
+  EnforcedStyle: nested
+
+Style/RescueStandardError:
+  EnforcedStyle: implicit
