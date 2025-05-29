@@ -79,9 +79,10 @@ class UrlValidatorService
   end
 
   def validate_scheme
-    return if ALLOWED_SCHEMES.include?(@parsed_uri.scheme)
+    scheme = @parsed_uri.scheme
+    return if ALLOWED_SCHEMES.include?(scheme)
 
-    raise ScraperErrors::ValidationError, "URL scheme '#{@parsed_uri.scheme}' not allowed. Must be HTTP or HTTPS"
+    raise ScraperErrors::ValidationError, "URL scheme '#{scheme}' not allowed. Must be HTTP or HTTPS"
   end
 
   def validate_host_security
