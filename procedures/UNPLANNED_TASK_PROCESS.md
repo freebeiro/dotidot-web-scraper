@@ -157,3 +157,5 @@ If unplanned task arises BETWEEN steps:
 | Task ID | Date | Description | Impact | Documented |
 |---------|------|-------------|--------|------------|
 | TASK_001 | 2025-01-30 | CI/CD Pipeline Setup | High - Adds automated quality gates | ✅ [Link](unplanned_tasks/TASK_001_CICD_SETUP.md) |
+| TASK_002 | 2025-05-29 | Debugging Workflow Documentation | Low - Process documentation | ✅ [Link](unplanned_tasks/TASK_002_DEBUGGING_WORKFLOW.md) |
+| TASK_003 | 2025-05-29 | Debug and Fix 156+ Failing Specs | Critical - Unblocked Task #1 | ✅ [Link](unplanned_tasks/TASK_003_DEBUG_FIX_SPECS.md) |
