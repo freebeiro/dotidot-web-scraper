@@ -40,5 +40,8 @@ module DotidotScraper
       expires_in: 1.hour,
       race_condition_ttl: 10.seconds
     }
+
+    # Enable Rack::Attack for rate limiting
+    config.middleware.use Rack::Attack
   end
 end
