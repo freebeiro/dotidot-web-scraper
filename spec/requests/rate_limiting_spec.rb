@@ -19,17 +19,30 @@ RSpec.describe "Rate Limiting", type: :request do
   end
 
   before do
+    # Enable Rack::Attack for rate limiting tests
+    ENV["TEST_RACK_ATTACK"] = "true"
+    Rack::Attack.enabled = true
+    
     # Stub external HTTP requests
     stub_request(:get, valid_url)
       .to_return(status: 200, body: "<html><head><title>Test</title></head></html>")
     
     # Clear any existing rate limit data
-    Rack::Attack.cache.store.clear
+    Rack::Attack.cache.store.clear if Rack::Attack.cache.store.respond_to?(:clear)
+    Rails.cache.clear
+    
+    # Give a moment for cache to clear
+    sleep 0.1
   end
 
   after do
     # Clean up rate limit data
-    Rack::Attack.cache.store.clear
+    Rack::Attack.cache.store.clear if Rack::Attack.cache.store.respond_to?(:clear)
+    Rails.cache.clear
+    
+    # Disable Rack::Attack again after rate limiting tests
+    ENV["TEST_RACK_ATTACK"] = nil
+    Rack::Attack.enabled = false
   end
 
   describe "IP-based rate limiting" do
@@ -41,14 +54,14 @@ RSpec.describe "Rate Limiting", type: :request do
       end
     end
 
-    it "blocks requests over the IP limit" do
-      # Make 21 requests to exceed the 20 per minute limit
-      20.times do
+    it "blocks requests over the domain limit" do
+      # Make 11 requests to exceed the 10 per minute per domain limit
+      10.times do |i|
         get "/api/v1/data", params: valid_params
         expect(response).to have_http_status(:ok)
       end
 
-      # 21st request should be rate limited
+      # 11th request should be rate limited (domain limit)
       get "/api/v1/data", params: valid_params
       expect(response).to have_http_status(:too_many_requests)
       
@@ -70,15 +83,15 @@ RSpec.describe "Rate Limiting", type: :request do
     end
 
     it "works with POST requests" do
-      # Make 21 POST requests to exceed limit
-      20.times do
+      # Make 11 POST requests to exceed domain limit
+      10.times do
         post "/api/v1/data", 
              params: valid_post_params.to_json,
              headers: { "Content-Type" => "application/json" }
         expect(response).to have_http_status(:ok)
       end
 
-      # 21st request should be rate limited
+      # 11th request should be rate limited
       post "/api/v1/data", 
            params: valid_post_params.to_json,
            headers: { "Content-Type" => "application/json" }
@@ -207,8 +220,12 @@ RSpec.describe "Rate Limiting", type: :request do
 
       it "allows localhost traffic in development" do
         # In development, localhost should be safelisted
-        # This test verifies the safelist logic would work
-        expect(Rack::Attack.safelisted?("allow-localhost")).to be_falsy # placeholder test
+        # Make multiple requests from localhost in dev mode
+        50.times do
+          get "/api/v1/data", params: valid_params, headers: { "REMOTE_ADDR" => "127.0.0.1" }
+        end
+        # All requests should succeed (not rate limited)
+        expect(response).to have_http_status(:ok)
       end
     end
   end

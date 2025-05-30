@@ -3,6 +3,11 @@
 # Configure Rack::Attack for rate limiting and security protection
 # Protects the web scraper API from abuse and overuse
 
+# Disable Rack::Attack in test environment unless explicitly testing rate limiting
+if Rails.env.test? && ENV["TEST_RACK_ATTACK"] != "true"
+  Rack::Attack.enabled = false
+end
+
 # Use Redis for storing rate limit counters
 Rack::Attack.cache.store = ActiveSupport::Cache::RedisCacheStore.new(
   url: ENV.fetch("REDIS_URL", "redis://localhost:6379/0"),
