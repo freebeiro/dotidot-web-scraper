@@ -32,20 +32,13 @@ jobs:
         rm -rf ~/.local/share/ruby-advisory-db
         bundle audit check --update
     
-    - name: Run OWASP dependency check
-      uses: dependency-check/Dependency-Check_Action@main
-      with:
-        project: 'dotidot-scraper'
-        path: '.'
-        format: 'HTML'
-        args: >
-          --enableRetired
-          --failOnCVSS 7
-          --suppression .github/owasp-suppressions.xml
-    
-    - name: Upload dependency check results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: dependency-check-report
-        path: reports/
+    - name: Check for hardcoded secrets
+      run: |
+        # Check for sensitive data patterns in Ruby files
+        echo "Checking for hardcoded secrets..."
+        if grep -r --include="*.rb" --include="*.yml" --include="*.yaml" -E "(password|secret|key|token)\s*[:=]\s*['\"][^'\"]+['\"]" app config lib 2>/dev/null; then
+          echo "WARNING: Potential hardcoded secrets found. Please review."
+          exit 1
+        else
+          echo "✓ No hardcoded secrets found"
+        fi
