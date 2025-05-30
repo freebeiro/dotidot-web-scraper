@@ -29,6 +29,7 @@ jobs:
     - name: Check for known vulnerabilities in dependencies
       run: |
         gem install bundler-audit
+        rm -rf ~/.local/share/ruby-advisory-db
         bundle audit check --update
     
     - name: Run OWASP dependency check
@@ -39,7 +40,8 @@ jobs:
         format: 'HTML'
         args: >
           --enableRetired
-          --enableExperimental
+          --failOnCVSS 7
+          --suppression .github/owasp-suppressions.xml
     
     - name: Upload dependency check results
       uses: actions/upload-artifact@v4
