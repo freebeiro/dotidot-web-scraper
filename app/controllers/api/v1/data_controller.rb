@@ -36,7 +36,7 @@ module Api
         )
 
         if result[:success]
-          render_success(result[:data])
+          render_success(result[:data], cached: result[:cached])
         else
           render_error(result[:error])
         end
@@ -75,8 +75,8 @@ module Api
         raise ScraperErrors::ValidationError, "Invalid fields JSON format"
       end
 
-      def render_success(data)
-        render json: data, status: :ok
+      def render_success(data, cached: false)
+        render json: data.merge(cached: cached), status: :ok
       end
 
       def render_error(error_message)

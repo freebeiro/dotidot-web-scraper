@@ -17,7 +17,7 @@ RSpec.describe "Api::V1::Data", type: :request do
       before do
         allow(ScraperOrchestratorService).to receive(:call)
           .with(url: valid_url, fields: hash_including("title", "description"))
-          .and_return(success: true, data: scraped_data)
+          .and_return(success: true, data: scraped_data, cached: false)
       end
 
       it "returns scraped data successfully" do
@@ -26,7 +26,7 @@ RSpec.describe "Api::V1::Data", type: :request do
         expect(response).to have_http_status(:ok)
 
         json = response.parsed_body
-        expect(json).to eq(scraped_data)
+        expect(json).to eq(scraped_data.merge("cached" => false))
       end
 
       it "calls the orchestrator service with correct parameters" do
