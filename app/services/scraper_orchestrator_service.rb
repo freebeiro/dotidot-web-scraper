@@ -7,6 +7,7 @@ require "digest"
 # HTTP fetching, HTML parsing, and data extraction services
 class ScraperOrchestratorService
   include ScraperHelpers
+  include MetaFieldHandler
   def self.call(url:, fields: [])
     new(
       url_validator: UrlValidatorService,
@@ -33,7 +34,7 @@ class ScraperOrchestratorService
     validate_inputs!(url)
 
     cached_result = check_cache(url, fields)
-    return success_response(cached_result, cached: true) if cached_result
+    return cached_result if cached_result
 
     process_scraping_workflow(url, fields, start_time)
   rescue ScraperErrors::BaseError, StandardError => e
@@ -45,9 +46,10 @@ class ScraperOrchestratorService
     parsed_document = parse_html(html_content)
     extracted_data = extract_data(parsed_document, fields)
 
-    cache_results(url, fields, extracted_data)
+    response_data = success_response(extracted_data, cached: false)
+    cache_results(url, fields, response_data)
     log_completion(start_time, true, false)
-    success_response(extracted_data, cached: false)
+    response_data
   end
 
   def handle_error(error, start_time)
@@ -69,9 +71,13 @@ class ScraperOrchestratorService
     raise ScraperErrors::ValidationError, validation_result[:error] || "URL validation failed"
   end
 
-  def check_cache(_url, _fields)
-    # Placeholder - will implement caching in a later step
-    nil
+  def check_cache(url, fields)
+    cached_data = CacheService.get(url: url, fields: fields)
+
+    cached_data.merge(cached: true) if cached_data.is_a?(Hash) && cached_data[:success]
+  rescue => e
+    Rails.logger.warn("Cache check failed: #{e.message}")
+    nil # Return nil to proceed with fresh scraping if cache fails
   end
 
   def fetch_html(url)
@@ -131,52 +137,17 @@ class ScraperOrchestratorService
     data
   end
 
-  def partition_fields(fields)
-    css_fields = []
-    meta_fields = []
+  def cache_results(url, fields, data)
+    # Only cache successful results
+    return false unless data.is_a?(Hash) && data[:success]
 
-    fields.each do |field|
-      if field_is_meta_tag?(field)
-        meta_fields << build_meta_field(field)
-      else
-        css_fields << field
-      end
-    end
+    # Store the data with cached: false to indicate it's fresh
+    cache_data = data.merge(cached: false)
 
-    [css_fields, meta_fields]
-  end
-
-  def field_is_meta_tag?(field)
-    # A field is a meta tag if it explicitly specifies type: "meta"
-    # or if the name starts with "meta:" prefix
-    return true if field[:type] == "meta" || field["type"] == "meta"
-
-    # Check the name field for meta: prefix
-    name = field[:name] || field["name"] || ""
-    name.to_s.start_with?("meta:")
-  end
-
-  def build_meta_field(field)
-    name = field[:name] || field["name"] || ""
-    meta_field = {}
-
-    if name.to_s.start_with?("meta:")
-      meta_field[:name] = name.sub(/^meta:/, "")
-      meta_field[:original_name] = name
-    else
-      meta_field[:name] = name
-    end
-
-    # Copy type if present
-    type = field[:type] || field["type"]
-    meta_field[:type] = type if type
-
-    meta_field
-  end
-
-  def cache_results(_url, _fields, _data)
-    # Placeholder - will implement caching in a later step
-    true
+    CacheService.set(url: url, fields: fields, data: cache_data)
+  rescue => e
+    Rails.logger.warn("Cache storage failed: #{e.message}")
+    false
   end
 
   def log_completion(start_time, success, cached, error: nil)

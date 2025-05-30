@@ -52,6 +52,7 @@ RSpec.describe "Api::V1::Data meta tag extraction", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.parsed_body).to eq({
+                                             "cached" => false,
                                              "description" => "A great page description",
                                              "keywords" => "test, example, meta",
                                              "og:title" => "Example OG Title"
@@ -76,6 +77,7 @@ RSpec.describe "Api::V1::Data meta tag extraction", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.parsed_body).to eq({
+                                             "cached" => false,
                                              "meta:description" => "A great page description",
                                              "meta:og:title" => "Example OG Title",
                                              "meta:og:image" => "https://example.com/image.jpg"
@@ -101,6 +103,7 @@ RSpec.describe "Api::V1::Data meta tag extraction", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.parsed_body).to eq({
+                                             "cached" => false,
                                              "title" => "Example Page",
                                              "heading" => "Example Domain",
                                              "description" => "A great page description",
@@ -126,6 +129,7 @@ RSpec.describe "Api::V1::Data meta tag extraction", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.parsed_body).to eq({
+                                             "cached" => false,
                                              "description" => "A great page description"
                                            })
       end
@@ -152,6 +156,7 @@ RSpec.describe "Api::V1::Data meta tag extraction", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.parsed_body).to eq({
+                                             "cached" => false,
                                              "title" => "Example Page",
                                              "description" => "A great page description",
                                              "meta:og:description" => "Example OG Description",
@@ -176,6 +181,7 @@ RSpec.describe "Api::V1::Data meta tag extraction", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to eq({
+                                           "cached" => false,
                                            "content-type" => "text/html; charset=UTF-8"
                                          })
     end
@@ -213,6 +219,7 @@ RSpec.describe "Api::V1::Data meta tag extraction", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to eq({
+                                           "cached" => false,
                                            "description" => "Uppercase name",
                                            "keywords" => "Mixed case"
                                          })

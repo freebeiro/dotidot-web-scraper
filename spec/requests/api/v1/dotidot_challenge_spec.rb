@@ -165,7 +165,15 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
   # Task #3: Caching Behavior
   describe "Caching Behavior (Task #3)" do
-    xit "caches repeated requests to same URL (Task #3 - Not implemented yet)" do
+    around do |example|
+      # Temporarily enable caching for this test
+      original_cache_store = Rails.cache
+      Rails.cache = ActiveSupport::Cache::MemoryStore.new
+      example.run
+      Rails.cache = original_cache_store
+    end
+
+    it "caches repeated requests to same URL" do
       # First request
       WebMock.stub_request(:get, "https://example.com/cached")
              .to_return(status: 200, body: valid_html, headers: { "Content-Type" => "text/html" })
@@ -177,6 +185,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
 
       expect(response).to have_http_status(:ok)
       first_data = response.parsed_body
+      expect(first_data["cached"]).to be false # First request should not be cached
 
       # Second request - should use cache (WebMock will verify only one request was made)
       get "/api/v1/data", params: {
@@ -187,6 +196,7 @@ RSpec.describe "Dotidot Challenge API", type: :request do
       expect(response).to have_http_status(:ok)
       second_data = response.parsed_body
       expect(second_data["price"]).to eq(first_data["price"])
+      expect(second_data["cached"]).to be true # Second request should be cached
 
       # Verify only one HTTP request was made
       expect(WebMock).to have_requested(:get, "https://example.com/cached").once
