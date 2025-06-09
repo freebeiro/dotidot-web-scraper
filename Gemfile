@@ -24,7 +24,7 @@ gem "puma", "~> 6.0"
 gem "redis", "~> 5.0"
 
 # Web scraping gems
-gem "http", "~> 5.1" # HTTP client library
+gem "http", "~> 5.3" # HTTP client library
 gem "nokogiri", "~> 1.15" # HTML/XML parsing
 
 # Background job processing
