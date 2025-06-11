@@ -1,6 +1,6 @@
-# Dotidot Web Scraper
+# Web Scraper
 
-A professional Ruby on Rails REST API for web scraping, built as a technical demonstration for the Dotidot Backend Developer challenge.
+A professional Ruby on Rails REST API for web scraping, built as a technical demonstration for the Backend Developer challenge.
 
 ## 🎯 Project Overview
 
