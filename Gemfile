@@ -12,7 +12,7 @@ gem "rails", "~> 7.1.0"
 gem "pg", "~> 1.1"
 
 # SQLite for testing when PostgreSQL not available
-gem "sqlite3", "~> 1.4", group: :test
+gem "sqlite3", "~> 2.7", group: :test
 
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", "~> 6.0"
